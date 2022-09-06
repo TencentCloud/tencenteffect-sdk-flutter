@@ -1,7 +1,5 @@
 ## 目录结构
-
-
-
+```
 ├── android	//flutter plugin android目录
 │   ├── gradle    //Android gradle
 │   ├── libs      //存放xmagic的原生android sdk
@@ -13,3 +11,4 @@
 │   ├── Assets    // 资源
 │   └── Classes   //flutter plugin ios 代码目录
 └── lib	//flutter plugin dart 接口代码
+```
