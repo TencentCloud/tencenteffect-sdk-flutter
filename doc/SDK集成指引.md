@@ -56,8 +56,9 @@ SDK集成指引
    在工程的pubspec.yaml文件中添加如下引用：
 
    ```json
-   tencent_effect_flutter:
-       path: 此处为美颜flutter sdk路径
+     tencent_effect_flutter:
+       git:
+         url: https://github.com/TencentCloud/tencenteffect-sdk-flutter
    ```
 
 3. ### 与直播、trtc、关联

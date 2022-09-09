@@ -12,3 +12,25 @@
 │   └── Classes   //flutter plugin ios 代码目录
 └── lib	//flutter plugin dart 接口代码
 ```
+
+## 快速集成
+
+### `pubspec.yaml`配置
+
+**推荐flutter sdk 版本 3.0.0 及以上**
+
+集成TencentEffect_Flutter版本,在`pubspec.yaml`中增加配置
+
+```
+ tencent_effect_flutter:
+       git:
+         url: https://github.com/TencentCloud/tencenteffect-sdk-flutter
+```
+
+然后更新依赖包
+
+```
+flutter packages get
+```
+
+### 
