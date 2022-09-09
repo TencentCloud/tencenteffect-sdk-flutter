@@ -11,3 +11,13 @@
 2.在demo下执行flutter pub get，然后进入到ios中执行pod install。
 
 3.打开demo/ios里面的Runner.xcworkspace，编译完成以后即可运行。
+
+**常见问题**
+
+1.Visual Studio Code运行iOS端时报错“iOS Observatory not discovered after 30 seconds. This is taking much longer than expected”，无法Hot Reload
+
+解决办法：在xcode中的Build Seetings的FLUTTER_BUILD_MODE的值改成debug
+
+2.demo与xcode断开连接的时候无法运行
+
+解决办法：在xcode中的Build Seetings的FLUTTER_BUILD_MODE的值改成release
