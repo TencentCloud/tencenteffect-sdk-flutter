@@ -1,10 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:tencent_effect_flutter/api/tencent_effect_api.dart';
 import 'package:tencent_effect_flutter/model/xmagic_property.dart';
-import 'package:tencent_effect_flutter/utils/Logs.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tencent_effect_flutter_demo/languages/AppLocalizations.dart';
@@ -50,6 +47,7 @@ class _PannelState extends State<PannelView> {
   }
 
   ///获取所有美颜属性
+  ///get all data
   void _getAllData() async {
     _datas = await BeautyDataManager.getInstance().getAllPannelData(context);
     List<String> types = [];
@@ -121,6 +119,7 @@ class _PannelState extends State<PannelView> {
   }
 
   ///创建分类布局
+  ///create type layout
   Widget _buildTitle(BuildContext context) {
     List<Widget> titlesView = [];
     for (var titleName in _beautyTypes) {
@@ -166,6 +165,7 @@ class _PannelState extends State<PannelView> {
   }
 
   ///创建slider布局
+  ///create slider layout
   Widget _buildSlider() {
     return _isShowSeekBar
         ? Slider(
@@ -181,7 +181,6 @@ class _PannelState extends State<PannelView> {
                 if (widget.onSliderUpdateXmagicType == 1) {
                   _onUpdataBeautyValue();
                 }
-                TXLog.printlog('slider change value = $localValue');
               }
               setState(() {
                 _currentProgress = localValue;
@@ -200,6 +199,7 @@ class _PannelState extends State<PannelView> {
   }
 
   ///用于创建listview 的item中的image
+  ///create listeView item :imageview
   Widget _getItemIcon(int index) {
     if (currentList?[index]?.thumbDrawableName?.isNotEmpty ?? false) {
       String path =
@@ -219,6 +219,7 @@ class _PannelState extends State<PannelView> {
   }
 
   ///用于创建listview的item
+  ///create listview items
   Widget itemBuilder(BuildContext context, int index) {
     return InkWell(
       onTap: () {
@@ -266,6 +267,7 @@ class _PannelState extends State<PannelView> {
   }
 
   /// 美颜属性的点击事件
+  /// item click
   void _onListItemClick(XmagicUIProperty? xmagicUIProperty) {
     if (xmagicUIProperty?.xmagicUIPropertyList?.isNotEmpty ?? false) {
       _xmagicProperty = null;
@@ -301,6 +303,7 @@ class _PannelState extends State<PannelView> {
   }
 
   /// 更新美颜属性值
+  /// update beauty item
   Future<void> _onUpdataBeautyValue() async {
     if (_xmagicProperty != null) {
       if (_xmagicProperty?.id == "video_empty_segmentation") {

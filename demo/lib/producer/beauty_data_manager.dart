@@ -9,7 +9,6 @@ import 'package:tencent_effect_flutter_demo/producer/beauty_property_producer_io
 class BeautyDataManager {
   static final BeautyDataManager _pannelDataManager =
       BeautyDataManager._internal();
-  Map<String, List<XmagicUIProperty>>? allData;
 
   BeautyDataManager._internal();
 
@@ -29,27 +28,11 @@ class BeautyDataManager {
 
   ///获取美颜面板的所有数据
   Future<Map<String, List<XmagicUIProperty>>?> getAllPannelData(
-      BuildContext context,
-      {bool isLoadNewDatas = false}) async {
-    if (isLoadNewDatas) {
-      Map<String, List<XmagicUIProperty>>? data;
-      data = await _beautyPropertyProducer.getAllDatas(context);
-      allData = data;
-      return data;
-    }
-    if (allData != null) {
-      return allData;
-    }
+    BuildContext context,
+  ) async {
     Map<String, List<XmagicUIProperty>>? data;
     data = await _beautyPropertyProducer.getAllDatas(context);
-    allData = data;
     return data;
-  }
-
-  ///用于清理美颜面板的数据
-  void cleanData() {
-    allData?.clear();
-    allData = null;
   }
 
   ///滤镜资源名对应的面板显示名称
