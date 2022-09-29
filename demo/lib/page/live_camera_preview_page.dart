@@ -14,13 +14,15 @@ import 'package:tencent_effect_flutter/api/tencent_effect_api.dart';
 import 'package:tencent_effect_flutter/model/xmagic_property.dart';
 import 'package:tencent_effect_flutter/utils/Logs.dart';
 import 'package:tencent_effect_flutter_demo/view/pannel_view.dart';
-import 'dart:convert' as convert;
-
+import '../languages/AppLocalizations.dart';
 import '../producer/beauty_data_manager.dart';
-/// 摄像头推流
+
+
+/// 直播推流页面
+/// Live-Camera page
 class LiveCameraPushPage extends StatefulWidget {
   const LiveCameraPushPage({Key? key}) : super(key: key);
-  static const String TAG = "LiveCameraPushPage";
+
   @override
   State<StatefulWidget> createState() {
     return _LiveCameraPushPageState();
@@ -29,21 +31,29 @@ class LiveCameraPushPage extends StatefulWidget {
 
 class _LiveCameraPushPageState extends State<LiveCameraPushPage>
     with WidgetsBindingObserver {
+
+  static const String TAG = "LiveCameraPushPage";
+
   /// 分辨率
+  /// Resolution
   V2TXLiveVideoResolution _resolution =
       V2TXLiveVideoResolution.v2TXLiveVideoResolution1280x720;
 
   /// 旋转角度
+  /// Rotation angle
   V2TXLiveRotation _liveRotation = V2TXLiveRotation.v2TXLiveRotation0;
 
   /// 摄像头
+  /// Camera
   V2TXLiveMirrorType _liveMirrorType =
       V2TXLiveMirrorType.v2TXLiveMirrorTypeAuto;
 
   /// 音频设置
+  /// Audio settings
   TXDeviceManager? _txDeviceManager;
 
   /// 音频数据
+  /// Audio data
   int? _localViewId;
   V2TXLivePusher? _livePusher;
 
@@ -82,8 +92,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
   @override
   dispose() {
     debugPrint("Live-Camera push dispose");
-    WidgetsBinding.instance?.removeObserver(this);
-    BeautyDataManager.getInstance().cleanData();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -114,6 +123,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
     await _livePusher?.setVideoQuality(videoEncoderParam);
 
     ///设置默认清晰度
+    ///Set default sharpness
     await _livePusher
         ?.setAudioQuality(V2TXLiveAudioQuality.v2TXLiveAudioQualityDefault);
 
@@ -140,6 +150,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
   }
 
   ///切换摄像头
+  ///switch camera
   void _switchCamera() async {
     await _txDeviceManager?.switchCamera(_isFrontCamera!);
   }
@@ -147,7 +158,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
   void _setBeautyListener() {
     TencentEffectApi.getApi()
         ?.setOnCreateXmagicApiErrorListener((errorMsg, code) {
-      TXLog.printlog("创建美颜对象出现错误 errorMsg = $errorMsg , code = $code");
+      TXLog.printlog("create xmaogicApi is error:  errorMsg = $errorMsg , code = $code");
     });
 
     TencentEffectApi.getApi()?.setAIDataListener(XmagicAIDataListenerImp());
@@ -166,7 +177,8 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
   }
 
   ///打开美颜操作，true表示开启美颜，FALSE表示关闭美颜
-  void enableBeauty(bool open) async {
+  ///true is turn on,false is turn off
+  Future<int?> enableBeauty(bool open) async {
     if (open) {
       _setBeautyListener();
     } else {
@@ -174,8 +186,8 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
     }
 
     ///开启美颜操作
-    var enableCustomVideo = await _livePusher?.enableCustomVideoProcess(open);
-    debugPrint("enable custom VideoProcess: $enableCustomVideo");
+    ///Turn on /off
+    return await _livePusher?.enableCustomVideoProcess(open);
   }
 
   stopPush() async {
@@ -290,6 +302,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
   }
 
   /// 打开美颜面板
+  /// show beauty pannel
   void _showModalBeautySheet(BuildContext context) {
     showModalBottomSheet<void>(
       backgroundColor: Colors.transparent,
@@ -306,7 +319,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('LIVE 页面'),
+          title: const Text('LIVE Page'),
           leading: IconButton(
               onPressed: () => {Navigator.pop(context)},
               icon: const Icon(Icons.arrow_back_ios)),
@@ -330,36 +343,41 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
                   child: Column(
                      children: [
                        TextButton(
-                           onPressed: () => {onCheckAuth()},
-                           child: const Text('检测美颜属性是否授权',
-                               style: TextStyle(
-                                 fontWeight: FontWeight.bold,
-                               ))),
-                       TextButton(
-                           onPressed: () => {onGetDeviceAbilities()},
-                           child: const Text('获取设备所有原子属性',
-                               style: TextStyle(
-                                 fontWeight: FontWeight.bold,
-                               ))),
-                       TextButton(
-                           onPressed: () => {onCheckSupportBeauty()},
-                           child: const Text('检测是否支持美颜',
-                               style: TextStyle(
-                                 fontWeight: FontWeight.bold,
-                               ))),
-                       TextButton(
-                           onPressed: () => {onCheckDeviceSupport()},
-                           child: const Text('检测设备是否支持此动效',
-                               style: TextStyle(
-                                 fontWeight: FontWeight.bold,
-                               ))),
-                       TextButton(
-                           onPressed: () => {onCallPropertyRequiredAbilities()},
-                           child: const Text('获取属性所需要的原子能力',
-                               style: TextStyle(
-                                 fontWeight: FontWeight.bold,
-                               )))
-                     ],
+                          onPressed: () => {onCheckAuth()},
+                          child: Text(
+                              AppLocalizations.of(context)!.getDemoLiveLabel1!,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ))),
+                      TextButton(
+                          onPressed: () => {onGetDeviceAbilities()},
+                          child: Text(
+                              AppLocalizations.of(context)!.getDemoLiveLabel2!,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ))),
+                      TextButton(
+                          onPressed: () => {onCheckSupportBeauty()},
+                          child: Text(
+                              AppLocalizations.of(context)!.getDemoLiveLabel3!,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ))),
+                      TextButton(
+                          onPressed: () => {onCheckDeviceSupport()},
+                          child: Text(
+                              AppLocalizations.of(context)!.getDemoLiveLabel4!,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ))),
+                      TextButton(
+                          onPressed: () => {onCallPropertyRequiredAbilities()},
+                          child: Text(
+                              AppLocalizations.of(context)!.getDemoLiveLabel5!,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              )))
+                    ],
               )),
 
               Positioned(
@@ -375,13 +393,12 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           const Text(
-                            '美颜',
+                            'ON/OFF Beauty',
                             style: TextStyle(color: Colors.white, fontSize: 15),
                           ),
                           Switch(
                             value: _isOpenBeauty,
                             onChanged: (value) {
-                              TXLog.printlog("打印测试日志信息  $_isFrontCamera");
                               setState(() {
                                 _isOpenBeauty = value;
                               });
@@ -389,7 +406,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
                             },
                           ),
                           const Text(
-                            '前摄像头',
+                            'Camera',
                             style: TextStyle(color: Colors.white, fontSize: 15),
                           ),
                           Switch(
@@ -410,16 +427,6 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
                           child: Flex(
                             direction: Axis.vertical,
                             children: [
-                              const Expanded(
-                                flex: 1,
-                                child: SizedBox(
-                                  width: double.infinity,
-                                  child: Text("Beauty Settings",
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold)),
-                                ),
-                              ),
                               Expanded(
                                 flex: 2,
                                 child: Flex(
@@ -807,7 +814,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
     List<XmagicProperty>? resultList =
     await TencentEffectApi.getApi()?.isBeautyAuthorized(beautyList);
     resultList?.forEach((element) {
-      TXLog.printlog("${LiveCameraPushPage.TAG}  打印检测后的数据 = ${json.encode(element)}");
+      TXLog.printlog("$TAG  method is onCheckAuth , result is  ${json.encode(element)}");
     });
     resultMsg = json.encode(resultList);
     showTipDialog();
@@ -818,7 +825,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
     await TencentEffectApi.getApi()?.getDeviceAbilities();
     deviceAbilities?.forEach((key, value) {
       TXLog.printlog(
-          "${LiveCameraPushPage.TAG}  打印设备原子属性  key = $key   value = $value");
+          "$TAG method is onGetDeviceAbilities ,result data is:  key = $key  , value = $value");
     });
     resultMsg = json.encode(deviceAbilities);
     showTipDialog();
@@ -827,8 +834,8 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
   void onCheckSupportBeauty() async {
     bool? isSupport = await TencentEffectApi.getApi()?.isSupportBeauty();
 
-    TXLog.printlog("${LiveCameraPushPage.TAG}  打印此设备是否支持美颜   isSupport = $isSupport");
-    resultMsg = " 打印此设备是否支持美颜   isSupport = $isSupport";
+    TXLog.printlog("$TAG  method is  onCheckSupportBeauty,result is  $isSupport");
+    resultMsg = " this device is support beauty : $isSupport";
     showTipDialog();
   }
 
@@ -851,7 +858,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
     await TencentEffectApi.getApi()?.isDeviceSupport(inputList);
     resultList?.forEach((element) {
       TXLog.printlog(
-          "${LiveCameraPushPage.TAG}  onCheckDeviceSupport 打印检测后的数据 = ${json.encode(element)}");
+          "$TAG method is onCheckDeviceSupport ,result data is ${json.encode(element)}");
     });
     resultMsg = json.encode(resultList);
     showTipDialog();
@@ -876,11 +883,15 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
     resultMsg = "";
     resultList?.forEach((key, value) {
       TXLog.printlog(
-          "${LiveCameraPushPage.TAG}  getPropertyRequiredAbilities 打印检测的动效 item = ${json.encode(key)}");
-      resultMsg = resultMsg +"属性： " +json.encode(key) +"   需要的能力："+ json.encode(value);
+          "$TAG method is  onCallPropertyRequiredAbilities ,key :   ${json.encode(key)}");
+      resultMsg = resultMsg +
+          "XmagicProperty ： " +
+          json.encode(key) +
+          "   Abilities：" +
+          json.encode(value);
       value?.forEach((element) {
         TXLog.printlog(
-            "${LiveCameraPushPage.TAG}  getPropertyRequiredAbilities 打印所需要的原子能力 item = ${element.toString()}");
+            "$TAG  method is onCallPropertyRequiredAbilities, abilities : ${element.toString()}");
       });
     });
     showTipDialog();
@@ -891,7 +902,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('返回结果'),
+            title: const Text('result'),
             content: SingleChildScrollView(
               child: ListBody(
                 children: <Widget>[
@@ -899,7 +910,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
                     child: Text(resultMsg),
                     onLongPress: () {
                       Clipboard.setData(ClipboardData(text: resultMsg));
-                      Fluttertoast.showToast(msg: '复制成功');
+                      Fluttertoast.showToast(msg: 'copy success');
                     },
                   )
                 ],
@@ -907,7 +918,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
             ),
             actions: <Widget>[
               FlatButton(
-                child: const Text('确定'),
+                child: const Text('ok'),
                 onPressed: () {
                   disDialog();
                 },

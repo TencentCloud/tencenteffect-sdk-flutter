@@ -7,8 +7,6 @@ import 'package:flutter/rendering.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:tencent_effect_flutter/api/tencent_effect_api.dart';
 import 'package:tencent_effect_flutter/utils/Logs.dart';
-import '../languages/AppLocalizations.dart';
-import '../producer/beauty_data_manager.dart';
 import '../utils/GenerateTestUserSig.dart';
 import '../utils/mettings_model.dart';
 import '../utils/tool.dart';
@@ -32,6 +30,7 @@ class TrtcCameraPreviewPage extends StatefulWidget {
 
 class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
     with WidgetsBindingObserver {
+  static const String TAG = "TrtcCameraPreviewPageState";
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   late MeetingModel meetModel;
 
@@ -102,12 +101,12 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
   void _setBeautyListener() {
     TencentEffectApi.getApi()
         ?.setOnCreateXmagicApiErrorListener((errorMsg, code) {
-      TXLog.printlog("创建美颜对象出现错误 errorMsg = $errorMsg , code = $code");
+      TXLog.printlog("$TAG method is _setBeautyListener, errorMsg = $errorMsg , code = $code");
     });
 
     TencentEffectApi.getApi()?.setAIDataListener(XmagicAIDataListenerImp());
     TencentEffectApi.getApi()?.setYTDataListener((data) {
-      TXLog.printlog("setYTDataListener  $data");
+      TXLog.printlog("$TAG mtthod is setYTDataListener ,result data: $data");
     });
     TencentEffectApi.getApi()?.setTipsListener(XmagicTipsListenerImp());
   }
@@ -121,6 +120,7 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
   }
 
   ///打开美颜操作，true表示开启美颜，FALSE表示关闭美颜
+  ///true is turn on,false is turn off
   Future<int?> enableBeauty(bool open) async {
     if (open) {
       _setBeautyListener();
@@ -128,7 +128,6 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
       _removeBeautyListener();
     }
 
-    ///开启美颜操作
     return await trtcCloud.enableCustomVideoProcess(open);
   }
 
@@ -213,10 +212,8 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
 
   @override
   dispose() async {
-    await enableBeauty(false);
-    WidgetsBinding.instance!.removeObserver(this);
-    BeautyDataManager.getInstance().cleanData();
     destoryRoom();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -449,6 +446,7 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
   }
 
   /// 打开美颜面板
+  /// show beauty pannel
   void _showModalBeautySheet(BuildContext context) {
     showModalBottomSheet<void>(
       backgroundColor: Colors.transparent,
@@ -484,16 +482,15 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TRTC 页面'),
+        title: const Text('TRTC Page'),
         leading: IconButton(
-            onPressed: () => {Navigator.pop(context)},
+            onPressed: () => {_onBackPress(true)},
             icon: const Icon(Icons.arrow_back_ios)),
       ),
       key: _scaffoldKey,
       body: WillPopScope(
         onWillPop: () async {
-          trtcCloud.exitRoom();
-          return true;
+          return await _onBackPress(false);
         },
         child: Stack(
           children: <Widget>[
@@ -559,6 +556,14 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
         ),
       ),
     );
+  }
+
+  Future<bool> _onBackPress(bool isBackBtn) async {
+    await enableBeauty(false);
+    if (isBackBtn) {
+      Navigator.pop(context);
+    }
+    return true;
   }
 }
 

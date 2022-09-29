@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:super_player/super_player.dart';
 
-class TestPlayerPage extends StatefulWidget {
-  const TestPlayerPage({Key? key}) : super(key: key);
+class PlayerPage extends StatefulWidget {
+  const PlayerPage({Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _TestState();
 }
 
-class _TestState extends State<TestPlayerPage>  with WidgetsBindingObserver{
+class _TestState extends State<PlayerPage>  with WidgetsBindingObserver{
   late TXVodPlayerController _controller;
 
   final double _aspectRatio = 16.0 / 9.0;

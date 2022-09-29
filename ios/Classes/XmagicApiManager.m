@@ -30,9 +30,9 @@ static const int MAX_SEG_VIDEO_DURATION = 200 * 1000;//视频长度限制
 
 @property (nonatomic, strong) XMagic          *xMagicApi;
 @property (assign, nonatomic) NSUInteger       heightF;
-@property (nonatomic, strong) NSString        *xmagicResPath;//美颜资源路径
+@property (nonatomic, strong) NSString        *xmagicResPath;//resource path
 @property (nonatomic, strong) NSString                  *makeup;//设置美妆时，只需要进行一次动效设置
-@property (nonatomic, strong) NSArray *resNames;  //美颜资源文件名
+@property (nonatomic, strong) NSArray *resNames;  //resource name
 
 @end
 
@@ -56,6 +56,7 @@ static XmagicApiManager *shareSingleton = nil;
     return [XmagicApiManager shareSingleton];
 }
 
+//init resource
 //初始化美颜资源
 -(void)initXmagicRes:(NSString *)resPath complete:(initXmagicResCallback)complete{
     [self initResName];
@@ -64,21 +65,17 @@ static XmagicApiManager *shareSingleton = nil;
     }
     [[NSFileManager  defaultManager] createDirectoryAtPath:resPath withIntermediateDirectories:YES attributes:nil error:NULL];
     NSError *error = nil;
-    for (int i = 1; i < _resNames.count; i++) {
+    for (int i = 0; i < _resNames.count; i++) {
         NSString *bundlePath = [[NSBundle mainBundle] pathForResource:_resNames[i] ofType:@"bundle"];
         if (bundlePath !=nil) {
             NSString *path = [NSString stringWithFormat:@"%@/%@.bundle",resPath,_resNames[i]];
             [[NSFileManager defaultManager] copyItemAtPath:bundlePath toPath:path error:&error];
             if (error != nil) {
-                NSLog(@"xmagic初始化美颜资源失败：%@",error.description);
+                NSLog(@"xmagic init resource error：%@",error.description);
                 break;
             }
         }
 
-    }
-
-    if (error != nil) {
-        NSLog(@"xmagic初始化美颜资源失败：%@",error.description);
     }
     if (complete != nil) {
         self.xmagicResPath = resPath;
@@ -92,7 +89,7 @@ static XmagicApiManager *shareSingleton = nil;
     @"3dMotionRes",@"ganMotionRes",@"handMotionRes",@"lut",@"segmentMotionRes"];
 }
 
-
+//Authentication
 //鉴权
 -(void)setLicense:(NSString *)licenseKey licenseUrl:(NSString *)licenseUrl completion:(setLicenseCallback)completion{
     [TELicenseCheck setTELicense:licenseUrl key:licenseKey completion:^(NSInteger authresult, NSString * _Nonnull errorMsg) {
@@ -101,6 +98,8 @@ static XmagicApiManager *shareSingleton = nil;
         }
     }];
 }
+
+//Set sdk log level
 //设置sdk日志等级
 -(void)setXmagicLogLevel:(int)logLevel{
     if (self.xMagicApi != nil) {
@@ -140,6 +139,8 @@ static XmagicApiManager *shareSingleton = nil;
         self.xMagicApi = nil;
     }
 }
+
+//Determine which beauties (beauty and body) are supported by the current license authorization
 //判断当前的 license 授权支持哪些美颜（beauty和body）
 -(NSString *)isBeautyAuthorized:(NSString *)jsonString{
     NSString *result;
@@ -155,7 +156,7 @@ static XmagicApiManager *shareSingleton = nil;
     return  result;
 }
 
-
+//build sdk
 //创建sdk
 - (void)buildBeautySDK:(int)width and:(int)height texture:(unsigned)textureID {
     NSString *beautyConfigPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
@@ -187,6 +188,8 @@ static XmagicApiManager *shareSingleton = nil;
     [self.xMagicApi configPropertyWithType:@"beauty" withName:@"beauty.whiten" withData:@"1" withExtraInfo:nil];
 }
 
+
+//Set beauty effects
 //设置美颜效果
 -(void)updateProperty:(NSString *)json{
     if (self.xMagicApi == nil) {
@@ -249,6 +252,7 @@ static XmagicApiManager *shareSingleton = nil;
     }
 }
 
+// Video compression and transcoding
 // 视频压缩转码处理
 -(void)convertVideoQuailtyWithInputAVURLAsset:(AVURLAsset*)avAsset
                               outputURL:(NSURL*)outputURL
@@ -296,6 +300,8 @@ static XmagicApiManager *shareSingleton = nil;
     }
 }
 
+
+//return TextureId
 //获取TextureId
 -(int)getTextureId:(ITXCustomBeautyVideoFrame * _Nonnull)srcFrame{
     if (self.xMagicApi == nil) {
