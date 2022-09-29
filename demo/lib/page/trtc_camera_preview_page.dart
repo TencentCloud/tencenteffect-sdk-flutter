@@ -213,7 +213,7 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
   @override
   dispose() async {
     destoryRoom();
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance?.removeObserver(this);
     super.dispose();
   }
 
