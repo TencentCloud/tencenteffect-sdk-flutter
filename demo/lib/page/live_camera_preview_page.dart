@@ -92,7 +92,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
   @override
   dispose() {
     debugPrint("Live-Camera push dispose");
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance?.removeObserver(this);
     super.dispose();
   }
 
