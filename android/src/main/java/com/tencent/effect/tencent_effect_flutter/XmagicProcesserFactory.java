@@ -1,13 +1,13 @@
 package com.tencent.effect.tencent_effect_flutter;
 
 import android.os.Looper;
+import android.util.Log;
 
 import com.tencent.effect.tencent_effect_flutter.xmagicplugin.XmagicApiManager;
 import com.tencent.live.beauty.custom.ITXCustomBeautyProcesser;
 import com.tencent.live.beauty.custom.ITXCustomBeautyProcesserFactory;
 import com.tencent.live.beauty.custom.TXCustomBeautyDef;
 import com.tencent.live.beauty.custom.TXCustomBeautyDef.TXCustomBeautyVideoFrame;
-import com.tencent.xmagic.log.LogUtils;
 
 /**
  * tencent_effect_flutter
@@ -29,14 +29,14 @@ public class XmagicProcesserFactory implements ITXCustomBeautyProcesserFactory {
             processer = new XmagicProcesser();
         }
         processer.create();
-        LogUtils.d(TAG,"createCustomBeautyProcesser  threadName = " + Thread.currentThread().getName());
+        Log.d(TAG,"createCustomBeautyProcesser  threadName = " + Thread.currentThread().getName());
         return processer;
     }
 
     @Override
     public void destroyCustomBeautyProcesser() {
         if(processer!=null){
-            LogUtils.d(TAG,"destroyCustomBeautyProcesser destroy xmagic  threadName = "
+            Log.d(TAG,"destroyCustomBeautyProcesser destroy xmagic  threadName = "
                     + Thread.currentThread().getName());
             if (Thread.currentThread() != Looper.getMainLooper().getThread()) { //非主线程，美颜不能在主线程销毁
                 processer.destroy();

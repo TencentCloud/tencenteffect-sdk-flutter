@@ -8,34 +8,43 @@ import 'package:tencent_effect_flutter/utils/Logs.dart';
 import '../languages/AppLocalizations.dart';
 import 'beauty_data_manager.dart';
 
-///
-/// 美颜数据生产类
+/// 用于构造美颜属性数据
+///construct beauty attribute data
 abstract class BeautyPropertyProducer {
   ///获取资源的存储路径，在美颜SDK初始化时调用
+  ///Get the storage path of the resource, which is called when the Beauty SDK is initialized
   Future<String> getResPath();
 
   ///获取滤镜资源路径
+  ///Get filter resource path
   Future<String> getLutDir();
 
   ///获取动效中的2D资源路径
+  ///Get the 2D resource path in the animation
   Future<String> getMotion2dDir();
 
   ///获取动效中的3D资源路径
+  ///Get the 3D resource path in the animation
   Future<String> getMotion3dDir();
 
   ///获取动效中的手势资源路径
+  ///Get the gesture resource path in the animation
   Future<String> getMotionhandDir();
 
-  ///获取动效中的Gan资源路径
+  ///获取动效中的趣味资源路径
+  ///Get interesting resource paths in motion effects
   Future<String> getMotionganDir();
 
   ///获取美妆资源路径
+  ///Get the Makeup resource path
   Future<String> getMakeUpDir();
 
   ///获取分割资源路径
+  ///Get split resource path
   Future<String> getSegDir();
 
   ///获取美颜面板的所有数据
+  ///Get all the data of the beauty panel
   Future<Map<String, List<XmagicUIProperty>>> getAllDatas(
       BuildContext context) async {
     Map<String, List<XmagicUIProperty>> resultData = {};
@@ -73,9 +82,11 @@ abstract class BeautyPropertyProducer {
   }
 
   ///获取美颜数据
+  ///Get beauty data
   Future<List<XmagicUIProperty>> getBeautyData(BuildContext context);
 
   ///获取美体数据
+  ///Get body data
   Future<List<XmagicUIProperty>> getBeautyBodyData(BuildContext context) async {
     List<XmagicUIProperty>? beautyBodyList = [];
     beautyBodyList.add(XmagicUIProperty(
@@ -120,9 +131,10 @@ abstract class BeautyPropertyProducer {
   }
 
   ///获取滤镜数据
+  ///Get filter data
   Future<List<XmagicUIProperty>?> getLutData(BuildContext context) async {
     String lutDir = await getLutDir();
-    TXLog.printlog('获取滤镜的文件路径    $lutDir');
+    TXLog.printlog('lut resource dir is  $lutDir');
     if (!await Directory(lutDir).exists()) {
       return null;
     }
@@ -161,6 +173,7 @@ abstract class BeautyPropertyProducer {
   }
 
   ///获取动效数据
+  ///Get motion data
   Future<List<XmagicUIProperty>?> getMotionData(BuildContext context) async {
     List<XmagicUIProperty> motionDatas = [];
     if ((await _get2dMotionData(context)).displayName != null) {
@@ -190,6 +203,7 @@ abstract class BeautyPropertyProducer {
   }
 
   ///获取2dMotion数据
+  ///Get 2dMotion data
   Future<XmagicUIProperty> _get2dMotionData(BuildContext context) async {
     XmagicUIProperty motion2dData = XmagicUIProperty();
     List<XmagicUIProperty> motion2dDatas = [];
@@ -228,6 +242,7 @@ abstract class BeautyPropertyProducer {
   }
 
   ///获取3dMotion数据
+  ///Get 3dMotion data
   Future<XmagicUIProperty> _get3dMotionData(BuildContext context) async {
     XmagicUIProperty motion3dData = XmagicUIProperty();
     List<XmagicUIProperty> motion3dDatas = [];
@@ -265,7 +280,8 @@ abstract class BeautyPropertyProducer {
     return motion3dData;
   }
 
-  ///获取handMotion数据
+  ///获取手势数据
+  ///Get gesture data
   Future<XmagicUIProperty> _getHandMotionData(BuildContext context) async {
     XmagicUIProperty motionHandData = XmagicUIProperty();
     List<XmagicUIProperty> motionHandDatas = [];
@@ -303,7 +319,8 @@ abstract class BeautyPropertyProducer {
     return motionHandData;
   }
 
-  ///获取ganMotion数据
+  ///获取趣味数据
+  ///Get GanMotion data
   Future<XmagicUIProperty> _getGanMotionData(BuildContext context) async {
     XmagicUIProperty motionHandData = XmagicUIProperty();
     List<XmagicUIProperty> motionGanDatas = [];
@@ -342,6 +359,7 @@ abstract class BeautyPropertyProducer {
   }
 
   ///获取美妆数据
+  ///Get makeup data
   Future<List<XmagicUIProperty>?> getMakeupData(BuildContext context) async {
     List<XmagicUIProperty> makeupDatas = [];
     String makeupDir = await getMakeUpDir();
@@ -381,6 +399,7 @@ abstract class BeautyPropertyProducer {
   }
 
   ///获取分割数据
+  ///Get SegmentMotion data
   Future<List<XmagicUIProperty>?> getSegmentMotionData(
       BuildContext context) async {
     List<XmagicUIProperty> segmentMotionDatas = [];
@@ -455,7 +474,6 @@ abstract class BeautyPropertyProducer {
 
   static String getFileName(String path) {
     List<String> items = path.split(Platform.pathSeparator);
-    TXLog.printlog("getFileName    $path");
     return items.last;
   }
 

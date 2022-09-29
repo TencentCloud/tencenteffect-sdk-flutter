@@ -12,6 +12,7 @@ import 'package:tencent_effect_flutter/model/xmagic_property.dart';
 class TencentEffectApiAndroid implements TencentEffectApi {
   static const String METHOD_CHANNEL_NAME = "tencent_effect_methodChannel_call_native";
   static const String EVENT_CHANNEL_NAME = "tencent_effect_methodChannel_call_flutter";
+  static const String TAG = "TencentEffectApiAndroid";
 
 
   MethodChannel _channel = MethodChannel(METHOD_CHANNEL_NAME);
@@ -169,20 +170,19 @@ class TencentEffectApiAndroid implements TencentEffectApi {
   Future<Map<XmagicProperty, List<String>?>> getPropertyRequiredAbilities(
       List<XmagicProperty> assetsList) async {
     String parameter = json.encode(assetsList);
-    TXLog.printlog("打印日志  getPropertyRequiredAbilities 传入的参数数据 $parameter");
+    TXLog.printlog("$TAG method is getPropertyRequiredAbilities ,parameter is $parameter");
     dynamic result =
     await _channel.invokeMethod("getPropertyRequiredAbilities", parameter);
     Map<XmagicProperty, List<String>> map = Map();
     if (result == null || result == "null") {
       return map;
     }
-    TXLog.printlog("打印日志  getPropertyRequiredAbilities 返回的参数   $result");
+    TXLog.printlog("$TAG method is getPropertyRequiredAbilities,native result data is $result");
     Map<dynamic, dynamic> data = json.decode(result);
     data.forEach((key, value) {
       if (value != null) {
         List<String>? list = XmagicDecodeUtil.decodeStringList(value);
         if (list != null && list.length > 0) {
-          TXLog.printlog("打印日志  getPropertyRequiredAbilities 传入的参数数据   $key");
          XmagicProperty property= XmagicProperty.fromJson(json.decode(key));
           map[property] = list;
         }
@@ -201,7 +201,7 @@ class TencentEffectApiAndroid implements TencentEffectApi {
   Future<List<XmagicProperty>> isBeautyAuthorized(
       List<XmagicProperty> properties) async {
     String parameter = json.encode(properties);
-    TXLog.printlog("打印日志  isBeautyAuthorized 传入的参数数据   $parameter");
+    TXLog.printlog("$TAG method is isBeautyAuthorized ,parameter is  $parameter");
     var result = await _channel.invokeMethod("isBeautyAuthorized", parameter);
     if (result == null || result == "null") {
       return [];
@@ -218,7 +218,7 @@ class TencentEffectApiAndroid implements TencentEffectApi {
   Future<List<XmagicProperty>> isDeviceSupport(
       List<XmagicProperty> assetsList) async {
     String parameter = json.encode(assetsList);
-    TXLog.printlog("打印日志  isDeviceSupport 传入的参数数据  $parameter");
+    TXLog.printlog("$TAG method is isDeviceSupport ,parameter is  $parameter");
     var result = await _channel.invokeMethod("isDeviceSupport", parameter);
     if (result == null || result == "null") {
       return [];

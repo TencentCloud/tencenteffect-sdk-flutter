@@ -245,4 +245,15 @@ class AppLocalizations {
   String? get beautylipHeightLabel =>
       _localizedStrings[locale.languageCode]!["beauty_mouth_height_label"];
 
+  String? get getDemoLiveLabel1 =>
+      _localizedStrings[locale.languageCode]!["demo_live_label1"];
+  String? get getDemoLiveLabel2 =>
+      _localizedStrings[locale.languageCode]!["demo_live_label2"];
+  String? get getDemoLiveLabel3 =>
+      _localizedStrings[locale.languageCode]!["demo_live_label3"];
+  String? get getDemoLiveLabel4 =>
+      _localizedStrings[locale.languageCode]!["demo_live_label4"];
+  String? get getDemoLiveLabel5 =>
+      _localizedStrings[locale.languageCode]!["demo_live_label5"];
+
 }

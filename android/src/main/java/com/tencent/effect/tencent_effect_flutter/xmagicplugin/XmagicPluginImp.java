@@ -13,7 +13,6 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.tencent.xmagic.XmagicProperty;
-import com.tencent.xmagic.log.LogUtils;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -102,17 +101,18 @@ public class XmagicPluginImp implements XmagicPlugin {
 
     /**
      * 初始化资源文件，用于将美颜的资源从assets中复制到到安装目录下
+     * Initialize the resource file for copying beauty resources from assets to the installation directory
      *
      * @param call
      * @param result
      */
     @Override
     public void initXmagic(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
-        LogUtils.d(TAG, "start init xmagic resource ");
+        Log.i(TAG, "start init xmagic resource ");
         if (call.arguments instanceof Map) {
             Map<String, String> map = (Map<String, String>) call.arguments;
             String resPathDir = map.get("pathDir");
-            LogUtils.e("打印日志信息  传入的文件地址为  ",  resPathDir);
+            Log.i(TAG, "method initXmagic resPathDir = " + resPathDir);
             XmagicApiManager.getInstance().initModelResource(applicationContext,resPathDir, isCopySuccess -> {
                 handler.post(() -> sendBoolData("initXmagic", isCopySuccess));
             });
@@ -124,7 +124,7 @@ public class XmagicPluginImp implements XmagicPlugin {
 
     /**
      * 进行美颜授权处理
-     *
+     *Perform beauty authorization processing
      * @param call
      * @param result
      */
@@ -217,7 +217,7 @@ public class XmagicPluginImp implements XmagicPlugin {
     public void updateProperty(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         if (call.arguments instanceof String) {
             String propertyStr = (String) call.arguments;
-            LogUtils.d(TAG, "updateProperty method parameter is " + propertyStr);
+            Log.i(TAG, "updateProperty method parameter is " + propertyStr);
             if (!TextUtils.isEmpty(propertyStr)) {
                 Type type = new TypeToken<XmagicProperty<XmagicProperty.XmagicPropertyValues>>() {
                 }.getType();
@@ -248,7 +248,7 @@ public class XmagicPluginImp implements XmagicPlugin {
             List<XmagicProperty<?>> data = gson.fromJson(parameter, type);
             XmagicApiManager.getInstance().isBeautyAuthorized(data);
             String resultStr = gson.toJson(data);
-            LogUtils.d(TAG, "isBeautyAuthorized resultStr = " + resultStr);
+            Log.i(TAG, "isBeautyAuthorized resultStr = " + resultStr);
             result.success(resultStr);
             return;
         }
@@ -303,7 +303,6 @@ public class XmagicPluginImp implements XmagicPlugin {
                  resultMap.put(gson.toJson(key),resultData.get(key));
             }
 
-            Log.e("神鼎飞丹砂",gson.toJson(resultMap));
             result.success(gson.toJson(resultMap));
             return;
         }
