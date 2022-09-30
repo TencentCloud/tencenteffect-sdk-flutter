@@ -2,26 +2,25 @@ SDK集成指引
 
 1. ### 美颜资源下载与集成
 
-   在美颜官网根据自己的套餐下载对应的资源文件以及SDK。
+   根据您购买的套餐下载[腾讯特效](https://cloud.tencent.com/document/product/616/65876)对应的资源文件以及SDK。
 
    添加文件到自己的工程中：
 
    #### Android：
 
-   1.1 在app 模块下找到build.gradle文件，添加您对应套餐的maven引用地址，例如您选择的是S1-04套餐，则添加如下：
+   - 在app 模块下找到build.gradle文件，添加您对应套餐的maven引用地址，例如您选择的是S1-04套餐，则添加如下：
 
    ```groovy
     dependencies {
           implementation 'com.tencent.mediacloud:TencentEffect_S1-04:latest.release'
-         
        }
    ```
    
    **各套餐对应的maven地址可参考官网https://cloud.tencent.com/document/product/616/65891**
    
-   1.2 在app 模块下找到src/main/assets文件夹，如果没有则创建，检查下载的SDK包中是否有 MotionRes 文件夹，如果有则将此文件夹拷贝到 `../src/main/assets` 目录下。
+   - 在app 模块下找到src/main/assets文件夹，如果没有则创建，检查下载的SDK包中是否有 MotionRes 文件夹，如果有则将此文件夹拷贝到 `../src/main/assets` 目录下。
    
-   1.3 在app模块下找到AndroidManifest.xml文件，在application表填内添加如下标签
+   - 在app模块下找到AndroidManifest.xml文件，在application表填内添加如下标签
    
    ```xml
      <uses-native-library
@@ -37,9 +36,9 @@ SDK集成指引
    
    #### iOS ：
    
-   把美颜资源添加到自己的工程里面
+   - 添加美颜资源到您的工程
    
-   添加后如下图：（你的资源种类跟下图不完全一致）
+   ​      添加后如下图：（你的资源种类跟下图不完全一致）
    
    ![](https://qcloudimg.tencent-cloud.cn/raw/e5cb4984aa2bfa14fd4f837acf465cfa.png)
    
@@ -47,7 +46,7 @@ SDK集成指引
    
    
    
-   在demo中把demo/lib/producer里面的4个类：BeautyDataManager、BeautyPropertyProducer、BeautyPropertyProducerAndroid和BeautyPropertyProducerIOS复制添加到自己的flutter工程中，这4个类是用来配置美颜资源，把美颜类型展示在美颜面板中。
+   - 在demo中把demo/lib/producer里面的4个类：BeautyDataManager、BeautyPropertyProducer、BeautyPropertyProducerAndroid和BeautyPropertyProducerIOS复制添加到自己的flutter工程中，这4个类是用来配置美颜资源，把美颜类型展示在美颜面板中。
    
    
    
@@ -61,38 +60,17 @@ SDK集成指引
          url: https://github.com/TencentCloud/tencenteffect-sdk-flutter
    ```
 
-3. ### 与直播、trtc、关联
+3. ### 与TRTC关联
 
    #### Android：
-
-   ​      直播：
-
-   在应用的application类的oncreate方法（或FlutterActivity的onCreate方法）中添加如下代码
-
-   ```java
-    TXLivePluginManager.register(new XmagicProcesserFactory());
-   ```
-
-   ​      TRTC：
 
    在应用的application类的oncreate方法（或FlutterActivity的onCreate方法）中添加如下代码
 
    ```jav
     TRTCCloudPlugin.register(new XmagicProcesserFactory());
    ```
-
+   
    #### IOS:
-
-   ​    直播：
-
-   在应用的AppDelegate类中的didFinishLaunchingWithOptions方法里面中添加如下代码：
-
-   ```objective-c
-   XmagicProcesserFactory *instance = [[XmagicProcesserFactory alloc] init];
-   [TXLivePluginManager registerWithCustomBeautyProcesserFactory:instance];
-   ```
-
-   ​    TRTC:
 
    在应用的AppDelegate类中的didFinishLaunchingWithOptions方法里面中添加如下代码：
 
@@ -100,9 +78,9 @@ SDK集成指引
    XmagicProcesserFactory *instance = [[XmagicProcesserFactory alloc] init];
    [TencentTRTCCloud registerWithCustomBeautyProcesserFactory:instance];
    ```
-
+   
    添加后如下图：
-
+   
    ![](https://qcloudimg.tencent-cloud.cn/raw/3f2de0a60696f18daedde2228d65076a.png)
    
    
@@ -137,22 +115,13 @@ SDK集成指引
            });
    ```
 
-6. ### 在直播、TRTC中开启美颜
-
-   直播：
+6. ### 开启美颜
 
    ```dart
-      ///开启美颜操作
-       var enableCustomVideo = await _livePusher?.enableCustomVideoProcess(true);
-   ```
-
-   TRTC：
-
-   ```dart
-      ///开启美颜操作
+   ///开启美颜操作
      var enableCustomVideo = await trtcCloud.enableCustomVideoProcess(open);
    ```
-
+   
    
 
 7. ### 设置美颜属性
@@ -236,7 +205,7 @@ SDK集成指引
 
 删除美颜资源：
 
-对于某些license没有授权美颜和美体的部分功能，美颜面板上不需要展示这部分功能，需要在美颜面板数据的配置中删除这部分功能的配置。
+对于某些License没有授权美颜和美体的部分功能，美颜面板上不需要展示这部分功能，需要在美颜面板数据的配置中删除这部分功能的配置。
 
 例如，删除口红特效：
 
