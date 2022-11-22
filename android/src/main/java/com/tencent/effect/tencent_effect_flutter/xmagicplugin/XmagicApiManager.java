@@ -12,11 +12,11 @@ import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.tencent.effect.tencent_effect_flutter.res.XmagicResParser;
+import com.tencent.effect.tencent_effect_flutter.utils.LogUtils;
 import com.tencent.xmagic.XmagicApi;
 import com.tencent.xmagic.XmagicApi.XmagicAIDataListener;
 import com.tencent.xmagic.XmagicApi.XmagicTipsListener;
 import com.tencent.xmagic.XmagicProperty;
-import com.tencent.xmagic.log.LogUtils;
 import com.tencent.xmagic.telicense.TELicenseCheck;
 import com.tencent.xmagic.telicense.TELicenseCheck.TELicenseCheckListener;
 
