@@ -8,7 +8,8 @@ import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 
-import com.tencent.xmagic.log.LogUtils;
+
+import com.tencent.effect.tencent_effect_flutter.utils.LogUtils;
 
 import io.flutter.plugin.platform.PlatformView;
 

@@ -37,8 +37,8 @@ class BeautyDataManager {
 
   ///滤镜资源名对应的面板显示名称
   static Map<String, String> lutDataMap = {
-    "n_baixi.png": "filter_baizhi",
-    "n_ziran.png": "filter_ziran",
+    "baixi_lf.png": "filter_baizhi",
+    "ziran_lf.png": "filter_ziran",
     "moren_lf.png": "filter_chulian",
     "xindong_lf.png": "filter_xindong",
     "dongjing_lf.png": "filter_dongjing",
