@@ -113,15 +113,17 @@ static TencentEffectFlutterPlugin* _instance = nil;
     [XmagicApiManager shareSingleton].eventAICallBlock = ^(id  _Nonnull event) {
         NSDictionary *eventDict = (NSDictionary *)event;
         NSDictionary *result;
-        if (eventDict[@"face_info"] != nil) {
-            result = @{@"methodName":@"aidata_onFaceDataUpdated", @"data":[self mapToString:eventDict]};
-        } else if (eventDict[@"hand_info"] != nil) {
-            result = @{@"methodName":@"aidata_onHandDataUpdated", @"data":[self mapToString:eventDict]};
-        } else if (eventDict[@"body_info"] != nil) {
-            result = @{@"methodName":@"aidata_onBodyDataUpdated", @"data":[self mapToString:eventDict]};
-        }
-        if (self.eventSink){
-            self.eventSink(result);
+        if (eventDict != nil && [eventDict isKindOfClass:[NSDictionary class]]) {
+            if (eventDict[@"face_info"] != nil) {
+                result = @{@"methodName":@"aidata_onFaceDataUpdated", @"data":[self mapToString:eventDict]};
+            } else if (eventDict[@"hand_info"] != nil) {
+                result = @{@"methodName":@"aidata_onHandDataUpdated", @"data":[self mapToString:eventDict]};
+            } else if (eventDict[@"body_info"] != nil) {
+                result = @{@"methodName":@"aidata_onBodyDataUpdated", @"data":[self mapToString:eventDict]};
+            }
+            if (self.eventSink){
+                self.eventSink(result);
+            }
         }
     };
     [XmagicApiManager shareSingleton].eventTipsCallBlock = ^(id  _Nonnull event) {
@@ -139,9 +141,11 @@ static TencentEffectFlutterPlugin* _instance = nil;
     };
     [XmagicApiManager shareSingleton].eventYTDataCallBlock = ^(id  _Nonnull event) {
         NSDictionary *eventDict = (NSDictionary *)event;
-        NSDictionary *result = @{@"methodName":@"onYTDataUpdate", @"data":[self mapToString:eventDict]};
-        if (self.eventSink){
-            self.eventSink(result);
+        if(eventDict !=nil && [eventDict isKindOfClass:[NSDictionary class]]){
+            NSDictionary *result = @{@"methodName":@"onYTDataUpdate", @"data":[self mapToString:eventDict]};
+            if (self.eventSink){
+                self.eventSink(result);
+            }
         }
     };
 }
