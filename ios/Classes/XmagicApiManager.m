@@ -7,7 +7,7 @@
 
 #import "XmagicApiManager.h"
 #import "XMagic.h"
-#import "TELicenseCheck.h"
+#import "YTCommonXMagic/TELicenseCheck.h"
 
 #define VERBOSE_LEVEL 2
 #define DEBUG_LEVEL   3

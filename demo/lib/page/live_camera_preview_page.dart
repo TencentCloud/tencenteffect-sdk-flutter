@@ -917,7 +917,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
               ),
             ),
             actions: <Widget>[
-              FlatButton(
+              TextButton(
                 child: const Text('ok'),
                 onPressed: () {
                   disDialog();

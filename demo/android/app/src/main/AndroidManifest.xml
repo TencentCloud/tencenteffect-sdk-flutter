@@ -17,7 +17,7 @@
         tools:replace="android:label">
         <uses-native-library
             android:name="libOpenCL.so"
-            android:required="true" />
+            android:required="false" />
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"

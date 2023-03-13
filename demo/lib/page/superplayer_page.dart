@@ -28,7 +28,7 @@ class _TestState extends State<PlayerPage>  with WidgetsBindingObserver{
   Future<void> initPlayer() async {
     await _controller.initialize();
     _controller.setConfig(FTXVodPlayConfig());
-    await _controller.startPlay(_url);
+    await _controller.startVodPlay(_url);
   }
 
   @override
