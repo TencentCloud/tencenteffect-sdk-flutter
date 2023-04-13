@@ -43,19 +43,19 @@ android {
     }
 
     //获取local.properties配置文件
-    def localProperties = new Properties()
-    def localPropertiesFile = rootProject.file('local.properties')
-    if (localPropertiesFile.exists()) {
-        localPropertiesFile.withReader('UTF-8') {
-            reader -> localProperties.load(reader)
-        }
-    }
+    // def localProperties = new Properties()
+    // def localPropertiesFile = rootProject.file('local.properties')
+    // if (localPropertiesFile.exists()) {
+    //     localPropertiesFile.withReader('UTF-8') {
+    //         reader -> localProperties.load(reader)
+    //     }
+    // }
 
-     //获取flutter的sdk路径
-    def flutterRoot = localProperties.getProperty('flutter.sdk')
-    if (flutterRoot == null) {
-        throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
-    }
+    //  //获取flutter的sdk路径
+    // def flutterRoot = localProperties.getProperty('flutter.sdk')
+    // if (flutterRoot == null) {
+    //     throw new GradleException("Flutter SDK not found. Define location with flutter.sdk in the local.properties file.")
+    // }
     dependencies {
         compileOnly 'com.tencent.liteav:custom-video-processor:latest.release'  //与直播间里关系的公共库
         compileOnly 'com.google.code.gson:gson:2.8.6'
