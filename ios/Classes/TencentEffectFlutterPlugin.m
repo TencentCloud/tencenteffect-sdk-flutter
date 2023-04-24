@@ -90,7 +90,9 @@ static TencentEffectFlutterPlugin* _instance = nil;
     [[XmagicApiManager shareSingleton] setLicense:licenseKey licenseUrl:licenseUrl completion:^(NSInteger authresult, NSString * _Nonnull errorMsg) {
         if (self.eventSink){
             NSDictionary *result = @{@"methodName":@"onLicenseCheckFinish", @"code":@(authresult),@"msg":errorMsg};
-            self.eventSink(result);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.eventSink(result);
+            });
         }
     }];
 }
@@ -122,7 +124,9 @@ static TencentEffectFlutterPlugin* _instance = nil;
                 result = @{@"methodName":@"aidata_onBodyDataUpdated", @"data":[self mapToString:eventDict]};
             }
             if (self.eventSink){
-                self.eventSink(result);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    self.eventSink(result);
+                });
             }
         }
     };
@@ -136,7 +140,9 @@ static TencentEffectFlutterPlugin* _instance = nil;
             result = @{@"methodName":@"tipsNeedHide", @"tips":eventDict[@"tips"],@"tipsIcon":eventDict[@"tips_icon"],@"type":eventDict[@"tips_type"],@"duration":@(timeCount)};
         }
         if (self.eventSink){
-            self.eventSink(result);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self.eventSink(result);
+            });
         }
     };
     [XmagicApiManager shareSingleton].eventYTDataCallBlock = ^(id  _Nonnull event) {
@@ -144,7 +150,9 @@ static TencentEffectFlutterPlugin* _instance = nil;
         if(eventDict !=nil && [eventDict isKindOfClass:[NSDictionary class]]){
             NSDictionary *result = @{@"methodName":@"onYTDataUpdate", @"data":[self mapToString:eventDict]};
             if (self.eventSink){
-                self.eventSink(result);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    self.eventSink(result);
+                });
             }
         }
     };
