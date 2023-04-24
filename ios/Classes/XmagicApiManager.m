@@ -33,6 +33,7 @@ static const int MAX_SEG_VIDEO_DURATION = 200 * 1000;//视频长度限制
 @property (nonatomic, strong) NSString        *xmagicResPath;//resource path
 @property (nonatomic, strong) NSString                  *makeup;//设置美妆时，只需要进行一次动效设置
 @property (nonatomic, strong) NSArray *resNames;  //resource name
+@property (nonatomic, strong) NSLock  *lock;
 
 @end
 
@@ -87,6 +88,7 @@ static XmagicApiManager *shareSingleton = nil;
     _resNames = @[@"Light3DPlugin",@"LightBodyPlugin",@"LightCore",
     @"LightHandPlugin",@"LightSegmentPlugin",@"makeupMotionRes",@"2dMotionRes",
     @"3dMotionRes",@"ganMotionRes",@"handMotionRes",@"lut",@"segmentMotionRes"];
+    _lock = [[NSLock alloc] init];
 }
 
 //Authentication
@@ -135,8 +137,10 @@ static XmagicApiManager *shareSingleton = nil;
 
 -(void)onDestroy{
     if (self.xMagicApi != nil) {
+        [_lock lock];
         [self.xMagicApi deinit];
         self.xMagicApi = nil;
+        [_lock unlock];
     }
 }
 
@@ -304,6 +308,7 @@ static XmagicApiManager *shareSingleton = nil;
 //return TextureId
 //获取TextureId
 -(int)getTextureId:(ITXCustomBeautyVideoFrame * _Nonnull)srcFrame{
+    [_lock lock];
     if (self.xMagicApi == nil) {
         [self buildBeautySDK:srcFrame.width and:srcFrame.height texture:srcFrame.textureId];
         self.heightF = srcFrame.height;
@@ -319,6 +324,7 @@ static XmagicApiManager *shareSingleton = nil;
     input.textureData.textureHeight = srcFrame.height;
     input.dataType = kYTTextureData;
     YTProcessOutput *output = [self.xMagicApi process:input withOrigin:YtLightImageOriginTopLeft withOrientation:YtLightCameraRotation0];
+    [_lock unlock];
     return output.textureData.texture;
 }
 
