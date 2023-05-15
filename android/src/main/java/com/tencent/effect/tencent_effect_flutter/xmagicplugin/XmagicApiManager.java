@@ -17,9 +17,6 @@ import com.tencent.xmagic.XmagicApi;
 import com.tencent.xmagic.XmagicApi.XmagicAIDataListener;
 import com.tencent.xmagic.XmagicApi.XmagicTipsListener;
 import com.tencent.xmagic.XmagicProperty;
-import com.tencent.xmagic.bean.TEBodyData;
-import com.tencent.xmagic.bean.TEFaceData;
-import com.tencent.xmagic.bean.TEHandData;
 import com.tencent.xmagic.telicense.TELicenseCheck;
 import com.tencent.xmagic.telicense.TELicenseCheck.TELicenseCheckListener;
 
@@ -106,39 +103,32 @@ public class XmagicApiManager implements SensorEventListener {
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         xmagicApi.setAIDataListener(new XmagicAIDataListener() {
             @Override
-            public void onFaceDataUpdated(List<TEFaceData> list) {
-                if (list == null) {
+            public void onFaceDataUpdated(Object faceDataList) {
+                if (faceDataList == null) {
                     return;
                 }
                 if (managerListener != null) {
-                    managerListener.onFaceDataUpdated(new Gson().toJson(list));
+                    managerListener.onFaceDataUpdated(new Gson().toJson(faceDataList));
                 }
             }
 
             @Override
-            public void onHandDataUpdated(List<TEHandData> list) {
-                if (list == null) {
+            public void onHandDataUpdated(Object handDataList) {
+                if (handDataList == null) {
                     return;
                 }
                 if (managerListener != null) {
-                    managerListener.onHandDataUpdated(new Gson().toJson(list));
+                    managerListener.onHandDataUpdated(new Gson().toJson(handDataList));
                 }
             }
 
             @Override
-            public void onBodyDataUpdated(List<TEBodyData> list) {
-                if (list == null) {
+            public void onBodyDataUpdated(Object bodyDataList) {
+                if (bodyDataList == null) {
                     return;
                 }
                 if (managerListener != null) {
-                    managerListener.onBodyDataUpdated(new Gson().toJson(list));
-                }
-            }
-
-            @Override
-            public void onAIDataUpdated(String s) {
-                if (managerListener != null) {
-                    managerListener.onYTDataUpdate(s);
+                    managerListener.onBodyDataUpdated(new Gson().toJson(bodyDataList));
                 }
             }
         });
@@ -158,6 +148,11 @@ public class XmagicApiManager implements SensorEventListener {
             }
         });
 
+        xmagicApi.setYTDataListener(s -> {
+            if (managerListener != null) {
+                managerListener.onYTDataUpdate(s);
+            }
+        });
         XmagicProperty.XmagicPropertyValues values = new XmagicProperty.XmagicPropertyValues(0, 100, 1, 0, 1);
         String effKey = XmagicConstant.BeautyConstant.BEAUTY_WHITEN;
         xmagicApi.updateProperty(new XmagicProperty<>(XmagicProperty.Category.BEAUTY, null, null, effKey, values));
