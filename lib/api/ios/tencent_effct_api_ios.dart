@@ -28,6 +28,9 @@ class TencentEffectApiIOS implements TencentEffectApi {
   }
 
   void _onEventChannelCallbackData(parameter) {
+    if(!(parameter is Map)){
+      return;
+    }
     String methodName = parameter['methodName'];
     switch (methodName) {
       case "initXmagic":
