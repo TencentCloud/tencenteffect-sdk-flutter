@@ -88,27 +88,29 @@ static TencentEffectFlutterPlugin* _instance = nil;
 
 -(void)setLicense:(NSString *)licenseKey licenseUrl:(NSString *)licenseUrl{
     [[XmagicApiManager shareSingleton] setLicense:licenseKey licenseUrl:licenseUrl completion:^(NSInteger authresult, NSString * _Nonnull errorMsg) {
-        if (self.eventSink){
-            NSDictionary *result = @{@"methodName":@"onLicenseCheckFinish", @"code":@(authresult),@"msg":errorMsg};
-            dispatch_async(dispatch_get_main_queue(), ^{
-                self.eventSink(result);
-            });
-        }
+        NSDictionary *result = @{@"methodName":@"onLicenseCheckFinish", @"code":@(authresult),@"msg":errorMsg};
+        [self eventSinkData:result];
     }];
 }
 
 -(void)initXmagic:(NSString *)resPath{
     [[XmagicApiManager shareSingleton] initXmagicRes:resPath complete:^(bool success) {
-        if (self.eventSink){
-            NSDictionary *result;
-            if (success) {
-                result = @{@"methodName":@"initXmagic", @"data":@true};
-            }else{
-                result = @{@"methodName":@"initXmagic", @"data":@false};
-            }
-            self.eventSink(result);
+        NSDictionary *result;
+        if (success) {
+            result = @{@"methodName":@"initXmagic", @"data":@true};
+        }else{
+            result = @{@"methodName":@"initXmagic", @"data":@false};
         }
+        [self eventSinkData:result];
     }];
+}
+
+-(void)eventSinkData:(NSDictionary *)result{
+    if (self.eventSink){
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self.eventSink(result);
+        });
+    }
 }
 
 -(void)setDataCallBack{
@@ -117,16 +119,16 @@ static TencentEffectFlutterPlugin* _instance = nil;
         NSDictionary *result;
         if (eventDict != nil && [eventDict isKindOfClass:[NSDictionary class]]) {
             if (eventDict[@"face_info"] != nil) {
-                result = @{@"methodName":@"aidata_onFaceDataUpdated", @"data":[self mapToString:eventDict]};
-            } else if (eventDict[@"hand_info"] != nil) {
-                result = @{@"methodName":@"aidata_onHandDataUpdated", @"data":[self mapToString:eventDict]};
-            } else if (eventDict[@"body_info"] != nil) {
-                result = @{@"methodName":@"aidata_onBodyDataUpdated", @"data":[self mapToString:eventDict]};
+                result = @{@"methodName":@"aidata_onFaceDataUpdated", @"data":[self mapToString:eventDict[@"face_info"]]};
+                [self eventSinkData:result];
             }
-            if (self.eventSink){
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    self.eventSink(result);
-                });
+            if (eventDict[@"hand_info"] != nil && [eventDict[@"hand_info"] isKindOfClass:[NSDictionary class]]) {
+                result = @{@"methodName":@"aidata_onHandDataUpdated", @"data":[self mapToString:eventDict[@"hand_info"]]};
+                [self eventSinkData:result];
+            }
+            if (eventDict[@"body_info"] != nil) {
+                result = @{@"methodName":@"aidata_onBodyDataUpdated", @"data":[self mapToString:eventDict[@"body_info"]]};
+                [self eventSinkData:result];
             }
         }
     };
@@ -139,21 +141,13 @@ static TencentEffectFlutterPlugin* _instance = nil;
         }else{
             result = @{@"methodName":@"tipsNeedHide", @"tips":eventDict[@"tips"],@"tipsIcon":eventDict[@"tips_icon"],@"type":eventDict[@"tips_type"],@"duration":@(timeCount)};
         }
-        if (self.eventSink){
-            dispatch_async(dispatch_get_main_queue(), ^{
-                self.eventSink(result);
-            });
-        }
+        [self eventSinkData:result];
     };
     [XmagicApiManager shareSingleton].eventYTDataCallBlock = ^(id  _Nonnull event) {
         NSDictionary *eventDict = (NSDictionary *)event;
         if(eventDict !=nil && [eventDict isKindOfClass:[NSDictionary class]]){
             NSDictionary *result = @{@"methodName":@"onYTDataUpdate", @"data":[self mapToString:eventDict]};
-            if (self.eventSink){
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    self.eventSink(result);
-                });
-            }
+            [self eventSinkData:result];
         }
     };
 }
@@ -165,11 +159,14 @@ static TencentEffectFlutterPlugin* _instance = nil;
     return  dict;
 }
 
--(NSString *)mapToString:(NSDictionary *)dict{
-    NSError *error;
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dict options:NSJSONWritingPrettyPrinted error:&error];
-    NSString *string = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    return  string;
+-(NSString *)mapToString:(id)dict{
+    if(dict != nil && ([dict isKindOfClass:[NSDictionary class]] || [dict isKindOfClass:[NSArray class]])){
+        NSError *error;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dict options:NSJSONWritingPrettyPrinted error:&error];
+        NSString *string = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        return  string;
+    }
+    return @"";
 }
 
 -(NSString *)isDeviceSupport:(NSString *)jsonString{
