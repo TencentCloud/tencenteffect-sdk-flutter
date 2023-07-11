@@ -42,6 +42,9 @@ typedef void (^eventYTDataCallBlock)(id event);
 //判断当前的 license 授权支持哪些美颜（beauty和body）
 -(NSString *)isBeautyAuthorized:(NSString *)jsonString;
 
+//开启美颜增强模式
+-(void)enableEnhancedMode;
+
 -(void)onPause;
 
 -(void)onResume;

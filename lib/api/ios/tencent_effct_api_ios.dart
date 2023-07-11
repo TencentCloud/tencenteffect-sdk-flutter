@@ -7,11 +7,12 @@ import 'package:tencent_effect_flutter/utils/Logs.dart';
 import 'package:tencent_effect_flutter/utils/xmagic_decode_utils.dart';
 import 'package:tencent_effect_flutter/model/xmagic_property.dart';
 
-
 ///美颜Android端实现
 class TencentEffectApiIOS implements TencentEffectApi {
-  static const String METHOD_CHANNEL_NAME = "tencent_effect_methodChannel_call_native";
-  static const String EVENT_CHANNEL_NAME = "tencent_effect_methodChannel_call_flutter";
+  static const String METHOD_CHANNEL_NAME =
+      "tencent_effect_methodChannel_call_native";
+  static const String EVENT_CHANNEL_NAME =
+      "tencent_effect_methodChannel_call_flutter";
   static const String TAG = "TencentEffectApiIOS";
 
   MethodChannel _channel = MethodChannel(METHOD_CHANNEL_NAME);
@@ -28,9 +29,6 @@ class TencentEffectApiIOS implements TencentEffectApi {
   }
 
   void _onEventChannelCallbackData(parameter) {
-    if(!(parameter is Map)){
-      return;
-    }
     String methodName = parameter['methodName'];
     switch (methodName) {
       case "initXmagic":
@@ -83,7 +81,6 @@ class TencentEffectApiIOS implements TencentEffectApi {
           _xmagicYTDataListener!(parameter['data'] as String);
         }
         break;
-
     }
   }
 
@@ -93,15 +90,11 @@ class TencentEffectApiIOS implements TencentEffectApi {
     _onCreateXmagicApiErrorListener = errorListener;
   }
 
-
-
   @override
-  void initXmagic(String xmagicResDir,InitXmagicCallBack xmagicCallBack) {
+  void initXmagic(String xmagicResDir, InitXmagicCallBack xmagicCallBack) {
     _initXmagicCallBack = xmagicCallBack;
-    _channel.invokeMethod("initXmagic",xmagicResDir);
+    _channel.invokeMethod("initXmagic", xmagicResDir);
   }
-
-
 
   @override
   void onPause() {
@@ -113,9 +106,10 @@ class TencentEffectApiIOS implements TencentEffectApi {
     _channel.invokeMethod("onResume");
   }
 
-
-
-
+  @override
+  void enableEnhancedMode() {
+    _channel.invokeMethod("enableEnhancedMode");
+  }
 
   @override
   void setLicense(String licenseKey, String licenseUrl,
@@ -169,14 +163,16 @@ class TencentEffectApiIOS implements TencentEffectApi {
   Future<Map<XmagicProperty, List<String>?>> getPropertyRequiredAbilities(
       List<XmagicProperty> assetsList) async {
     String parameter = json.encode(assetsList);
-    TXLog.printlog("$TAG method is getPropertyRequiredAbilities ,parameter is $parameter");
+    TXLog.printlog(
+        "$TAG method is getPropertyRequiredAbilities ,parameter is $parameter");
     dynamic result =
-    await _channel.invokeMethod("getPropertyRequiredAbilities", parameter);
+        await _channel.invokeMethod("getPropertyRequiredAbilities", parameter);
     Map<XmagicProperty, List<String>> map = Map();
     if (result == null || result == "null") {
       return map;
     }
-    TXLog.printlog("$TAG method is getPropertyRequiredAbilities,native result data is $result");
+    TXLog.printlog(
+        "$TAG method is getPropertyRequiredAbilities,native result data is $result");
     Map<dynamic, dynamic> data = json.decode(result);
     data.forEach((key, value) {
       if (value != null) {
@@ -200,7 +196,8 @@ class TencentEffectApiIOS implements TencentEffectApi {
   Future<List<XmagicProperty>> isBeautyAuthorized(
       List<XmagicProperty> properties) async {
     String parameter = json.encode(properties);
-    TXLog.printlog("$TAG method is isBeautyAuthorized ,parameter is  $parameter");
+    TXLog.printlog(
+        "$TAG method is isBeautyAuthorized ,parameter is  $parameter");
     var result = await _channel.invokeMethod("isBeautyAuthorized", parameter);
     if (result == null || result == "null") {
       return [];
@@ -229,7 +226,4 @@ class TencentEffectApiIOS implements TencentEffectApi {
     });
     return resultData;
   }
-
-
-
 }

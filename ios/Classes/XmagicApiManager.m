@@ -30,6 +30,7 @@ static const int MAX_SEG_VIDEO_DURATION = 200 * 1000;//视频长度限制
 
 @property (nonatomic, strong) XMagic          *xMagicApi;
 @property (assign, nonatomic) NSUInteger       heightF;
+@property (assign, nonatomic) NSUInteger       widthF;
 @property (nonatomic, strong) NSString        *xmagicResPath;//resource path
 @property (nonatomic, strong) NSString                  *makeup;//设置美妆时，只需要进行一次动效设置
 @property (nonatomic, strong) NSArray *resNames;  //resource name
@@ -158,6 +159,12 @@ static XmagicApiManager *shareSingleton = nil;
     }
     result = [self mapToString:dictionary];
     return  result;
+}
+
+- (void)enableEnhancedMode{
+    if (self.xMagicApi != nil) {
+        [self.xMagicApi enableEnhancedMode];
+    }
 }
 
 //build sdk
@@ -312,10 +319,12 @@ static XmagicApiManager *shareSingleton = nil;
     if (self.xMagicApi == nil) {
         [self buildBeautySDK:srcFrame.width and:srcFrame.height texture:srcFrame.textureId];
         self.heightF = srcFrame.height;
+        self.widthF = srcFrame.width;
     }
-    if(self.xMagicApi!=nil && self.heightF!=srcFrame.height){
-        self.heightF = srcFrame.width;
+    if(self.xMagicApi!=nil && (self.heightF != srcFrame.height || self.widthF != srcFrame.width)){
         [self.xMagicApi setRenderSize:CGSizeMake(srcFrame.width, srcFrame.height)];
+        self.heightF = srcFrame.height;
+        self.widthF = srcFrame.width;
     }
     YTProcessInput *input = [[YTProcessInput alloc] init];
     input.textureData = [[YTTextureData alloc] init];

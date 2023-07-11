@@ -14,15 +14,15 @@ abstract class TencentEffectApi {
       return _api;
     }
     if (Platform.isAndroid) {
-    _api = TencentEffectApiAndroid();
+      _api = TencentEffectApiAndroid();
     } else if (Platform.isIOS) {
-    _api = TencentEffectApiIOS();
+      _api = TencentEffectApiIOS();
     } else {}
     return _api;
   }
 
   ///初始化美颜数据，使用美颜前必须先调用此方法。
-  void initXmagic(String xmagicResDir,InitXmagicCallBack callBack);
+  void initXmagic(String xmagicResDir, InitXmagicCallBack callBack);
 
   ///美颜进行鉴权处理
   void setLicense(
@@ -31,17 +31,17 @@ abstract class TencentEffectApi {
   ///设置 SDK 的 log 等级，建议开发调试时设为 `Log.DEBUG`，正式发布时设置为 `Log.WARN`，如果正式发布设置为 `Log.DEBUG`，大量的日志会影响性能。
   void setXmagicLogLevel(int logLevel);
 
-
   ///恢复渲染，页面可见时调用
   void onResume();
 
   ///暂停渲染，页面不可见时调用
   void onPause();
 
+  ///开启美颜增强模式
+  void enableEnhancedMode();
 
   ///更新美颜属性， 可在任意线程调用。
   void updateProperty(XmagicProperty xmagicProperty);
-
 
   ///设置创建美颜对象时的回调接口（如果出错会回调此接口）
   void setOnCreateXmagicApiErrorListener(
@@ -76,6 +76,7 @@ abstract class TencentEffectApi {
 
 ///授权校验的结果回调方法
 typedef LicenseCheckListener = void Function(int errorCode, String msg);
+
 ///创建美颜实例时的错误回调方法
 typedef OnCreateXmagicApiErrorListener = void Function(
     String errorMsg, int code);
@@ -84,7 +85,8 @@ typedef XmagicYTDataListener = void Function(String data);
 
 typedef InitXmagicCallBack = void Function(bool reslut);
 
-typedef ProcessImgCallBack = void Function(Uint8List uint8list,int width,int height);
+typedef ProcessImgCallBack = void Function(
+    Uint8List uint8list, int width, int height);
 
 abstract class XmagicTipsListener {
   /// 显示tips。Show the tip.

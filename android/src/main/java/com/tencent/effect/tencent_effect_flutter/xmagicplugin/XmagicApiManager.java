@@ -334,6 +334,12 @@ public class XmagicApiManager implements SensorEventListener {
     }
 
 
+    public void enableEnhancedMode() {
+        if (xmagicApi != null) {
+            xmagicApi.enableEnhancedMode();
+        }
+    }
+
     interface InitModelResourceCallBack {
         void onResult(boolean isCopySuccess);
     }
