@@ -29,9 +29,6 @@ class TencentEffectApiAndroid implements TencentEffectApi {
   }
 
   void _onEventChannelCallbackData(parameter) {
-    if(!(parameter is Map)){
-      return;
-    }
     String methodName = parameter['methodName'];
     switch (methodName) {
       case "initXmagic":
@@ -233,6 +230,12 @@ class TencentEffectApiAndroid implements TencentEffectApi {
     });
     return resultData;
   }
+
+  @override
+  void enableEnhancedMode() {
+    _channel.invokeMethod("enableEnhancedMode");
+  }
+
 
 
 

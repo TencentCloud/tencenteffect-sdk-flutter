@@ -43,5 +43,6 @@ public interface XmagicPlugin {
 
     void isDeviceSupport(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
 
+    void enableEnhancedMode(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
 
 }

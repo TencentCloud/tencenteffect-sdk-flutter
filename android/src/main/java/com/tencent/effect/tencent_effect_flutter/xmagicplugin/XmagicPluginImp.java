@@ -332,6 +332,11 @@ public class XmagicPluginImp implements XmagicPlugin {
         resultParameterError(call.method, result);
     }
 
+    @Override
+    public void enableEnhancedMode(@NonNull MethodCall call, @NonNull MethodChannel.Result result){
+        XmagicApiManager.getInstance().enableEnhancedMode();
+        result.success(true);
+    }
 
 
 

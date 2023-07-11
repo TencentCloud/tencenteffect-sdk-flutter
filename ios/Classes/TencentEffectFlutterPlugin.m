@@ -81,6 +81,9 @@ static TencentEffectFlutterPlugin* _instance = nil;
       result(nil);
   }else if ([@"getDeviceAbilities" isEqualToString:call.method]) {
       result(nil);
+  }else if ([@"enableEnhancedMode" isEqualToString:call.method]) {
+      [[XmagicApiManager shareSingleton] enableEnhancedMode];
+      result(nil);
   }else {
     result(FlutterMethodNotImplemented);
   }
