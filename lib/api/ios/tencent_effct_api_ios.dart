@@ -226,4 +226,10 @@ class TencentEffectApiIOS implements TencentEffectApi {
     });
     return resultData;
   }
+
+  @override
+  void setDowngradePerformance() {
+    /// ios 暂时空实现
+
+  }
 }

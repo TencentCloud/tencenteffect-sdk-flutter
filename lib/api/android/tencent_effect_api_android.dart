@@ -236,6 +236,11 @@ class TencentEffectApiAndroid implements TencentEffectApi {
     _channel.invokeMethod("enableEnhancedMode");
   }
 
+  @override
+  void setDowngradePerformance() {
+    _channel.invokeMethod("setDowngradePerformance");
+  }
+
 
 
 

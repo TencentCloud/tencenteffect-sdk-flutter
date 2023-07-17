@@ -40,6 +40,9 @@ abstract class TencentEffectApi {
   ///开启美颜增强模式
   void enableEnhancedMode();
 
+  /// 开启性能模式
+  void setDowngradePerformance();
+
   ///更新美颜属性， 可在任意线程调用。
   void updateProperty(XmagicProperty xmagicProperty);
 
