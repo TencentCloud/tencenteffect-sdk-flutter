@@ -45,4 +45,6 @@ public interface XmagicPlugin {
 
     void enableEnhancedMode(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
 
+    void setDowngradePerformance(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
+
 }

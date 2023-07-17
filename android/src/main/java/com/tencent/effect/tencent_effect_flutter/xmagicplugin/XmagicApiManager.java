@@ -340,6 +340,13 @@ public class XmagicApiManager implements SensorEventListener {
         }
     }
 
+
+    public void setDowngradePerformance() {
+        if (xmagicApi != null) {
+            xmagicApi.setDowngradePerformance();
+        }
+    }
+
     interface InitModelResourceCallBack {
         void onResult(boolean isCopySuccess);
     }

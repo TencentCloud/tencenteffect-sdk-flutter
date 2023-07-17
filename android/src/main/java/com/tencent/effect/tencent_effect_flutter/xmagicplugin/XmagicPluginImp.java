@@ -339,6 +339,12 @@ public class XmagicPluginImp implements XmagicPlugin {
     }
 
 
+    @Override
+    public void setDowngradePerformance(@NonNull MethodCall call, @NonNull MethodChannel.Result result){
+        XmagicApiManager.getInstance().setDowngradePerformance();
+        result.success(true);
+    }
+
 
 
     private void sendBoolData(String methodName, boolean data) {
