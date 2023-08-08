@@ -162,12 +162,26 @@ static TencentEffectFlutterPlugin* _instance = nil;
     return  dict;
 }
 
--(NSString *)mapToString:(id)dict{
-    if(dict != nil && ([dict isKindOfClass:[NSDictionary class]] || [dict isKindOfClass:[NSArray class]])){
+- (NSString *)mapToString:(id)dict {
+    if (dict != nil && ([dict isKindOfClass:[NSDictionary class]] || [dict isKindOfClass:[NSArray class]])) {
+        if (![NSJSONSerialization isValidJSONObject:dict]) {
+            NSLog(@"Invalid JSON object");
+            return @"";
+        }
+        
         NSError *error;
-        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dict options:NSJSONWritingPrettyPrinted error:&error];
-        NSString *string = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-        return  string == nil ? @"" : string;
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dict options:NSJSONWritingFragmentsAllowed error:&error];
+        if (error != nil) {
+            NSLog(@"mapToString error: %@", error.description);
+            return @"";
+        }
+        
+        if (jsonData != nil) {
+            NSString *string = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+            if (string != nil) {
+                return string;
+            }
+        }
     }
     return @"";
 }
