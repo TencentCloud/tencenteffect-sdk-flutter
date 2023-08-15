@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:tencent_effect_flutter/api/tencent_effect_api.dart';
 import 'package:tencent_effect_flutter/utils/Logs.dart';
@@ -16,12 +15,12 @@ class TencentEffectApiAndroid implements TencentEffectApi {
 
 
   MethodChannel _channel = MethodChannel(METHOD_CHANNEL_NAME);
-  OnCreateXmagicApiErrorListener? _onCreateXmagicApiErrorListener;
-  XmagicAIDataListener? _xmagicAIDataListener;
-  XmagicTipsListener? _xmagicTipsListener;
-  XmagicYTDataListener? _xmagicYTDataListener;
+  OnCreateXmagicApiErrorListener? _onCreateXMagicApiErrorListener;
+  XmagicAIDataListener? _xMagicAIDataListener;
+  XmagicTipsListener? _xMagicTipsListener;
+  XmagicYTDataListener? _xMagicYTDataListener;
   LicenseCheckListener? _licenseCheckListener;
-  InitXmagicCallBack? _initXmagicCallBack;
+  InitXmagicCallBack? _initXMagicCallBack;
 
   TencentEffectApiAndroid() {
     EventChannel(EVENT_CHANNEL_NAME)
@@ -35,10 +34,10 @@ class TencentEffectApiAndroid implements TencentEffectApi {
     String methodName = parameter['methodName'];
     switch (methodName) {
       case "initXmagic":
-        if (_initXmagicCallBack != null) {
+        if (_initXMagicCallBack != null) {
           var data = parameter['data'] as bool;
-          _initXmagicCallBack!(data);
-          _initXmagicCallBack = null;
+          _initXMagicCallBack!(data);
+          _initXMagicCallBack = null;
         }
         break;
       case "onLicenseCheckFinish":
@@ -54,18 +53,18 @@ class TencentEffectApiAndroid implements TencentEffectApi {
         Map map = parameter['data'];
         String msg = map['msg'] as String;
         int code = map['code'] as int;
-        if (_onCreateXmagicApiErrorListener != null) {
-          _onCreateXmagicApiErrorListener!(msg, code);
+        if (_onCreateXMagicApiErrorListener != null) {
+          _onCreateXMagicApiErrorListener!(msg, code);
         }
         break;
       case "aidata_onFaceDataUpdated":
-        _xmagicAIDataListener?.onFaceDataUpdated(parameter['data'] as String);
+        _xMagicAIDataListener?.onFaceDataUpdated(parameter['data'] as String);
         break;
       case "aidata_onHandDataUpdated":
-        _xmagicAIDataListener?.onHandDataUpdated(parameter['data'] as String);
+        _xMagicAIDataListener?.onHandDataUpdated(parameter['data'] as String);
         break;
       case "aidata_onBodyDataUpdated":
-        _xmagicAIDataListener?.onBodyDataUpdated(parameter['data'] as String);
+        _xMagicAIDataListener?.onBodyDataUpdated(parameter['data'] as String);
         break;
       case "tipsNeedShow":
         Map map = parameter['data'];
@@ -73,18 +72,18 @@ class TencentEffectApiAndroid implements TencentEffectApi {
         String tipsIcon = map['tipsIcon'] as String;
         int type = map['type'] as int;
         int duration = map['duration'] as int;
-        _xmagicTipsListener?.tipsNeedShow(tips, tipsIcon, type, duration);
+        _xMagicTipsListener?.tipsNeedShow(tips, tipsIcon, type, duration);
         break;
       case "tipsNeedHide":
         Map map = parameter['data'];
         String tips = map['tips'] as String;
         String tipsIcon = map['tipsIcon'] as String;
         int type = map['type'] as int;
-        _xmagicTipsListener?.tipsNeedHide(tips, tipsIcon, type);
+        _xMagicTipsListener?.tipsNeedHide(tips, tipsIcon, type);
         break;
       case "onYTDataUpdate":
-        if (_xmagicYTDataListener != null) {
-          _xmagicYTDataListener!(parameter['data'] as String);
+        if (_xMagicYTDataListener != null) {
+          _xMagicYTDataListener!(parameter['data'] as String);
         }
         break;
 
@@ -92,16 +91,15 @@ class TencentEffectApiAndroid implements TencentEffectApi {
   }
 
   @override
-  void setOnCreateXmagicApiErrorListener(
-      OnCreateXmagicApiErrorListener? errorListener) {
-    _onCreateXmagicApiErrorListener = errorListener;
+  void setOnCreateXmagicApiErrorListener(OnCreateXmagicApiErrorListener? errorListener) {
+    _onCreateXMagicApiErrorListener = errorListener;
   }
 
 
 
   @override
   void initXmagic(String xmagicResDir,InitXmagicCallBack xmagicCallBack) {
-    _initXmagicCallBack = xmagicCallBack;
+    _initXMagicCallBack = xmagicCallBack;
     _channel.invokeMethod("initXmagic",{"pathDir":xmagicResDir});
   }
 
@@ -124,8 +122,8 @@ class TencentEffectApiAndroid implements TencentEffectApi {
   @override
   void setLicense(String licenseKey, String licenseUrl,
       LicenseCheckListener checkListener) {
-    var paramter = {"licenseKey": licenseKey, "licenseUrl": licenseUrl};
-    _channel.invokeMethod("setLicense", paramter);
+    var parameter = {"licenseKey": licenseKey, "licenseUrl": licenseUrl};
+    _channel.invokeMethod("setLicense", parameter);
     _licenseCheckListener = checkListener;
   }
 
@@ -136,23 +134,25 @@ class TencentEffectApiAndroid implements TencentEffectApi {
 
   @override
   void updateProperty(XmagicProperty xmagicProperty) {
-    _channel.invokeMethod<String>(
-        "updateProperty", json.encode(xmagicProperty.toJson()));
+    _channel.invokeMethod("updateProperty", json.encode(xmagicProperty.toJson()));
   }
 
   @override
   void setAIDataListener(XmagicAIDataListener? aiDataListener) {
-    this._xmagicAIDataListener = aiDataListener;
+    this._xMagicAIDataListener = aiDataListener;
+    _channel.invokeMethod("enableAIDataListener", aiDataListener != null);
   }
 
   @override
-  void setTipsListener(XmagicTipsListener? xmagicTipsListener) {
-    this._xmagicTipsListener = xmagicTipsListener;
+  void setTipsListener(XmagicTipsListener? tipsListener) {
+    this._xMagicTipsListener = tipsListener;
+    _channel.invokeMethod("enableTipsListener", tipsListener != null);
   }
 
   @override
-  void setYTDataListener(XmagicYTDataListener? xmagicYTDataListener) {
-    this._xmagicYTDataListener = xmagicYTDataListener;
+  void setYTDataListener(XmagicYTDataListener? ytDataListener) {
+    this._xMagicYTDataListener = ytDataListener;
+    _channel.invokeMethod("enableYTDataListener", ytDataListener != null);
   }
 
   @override
@@ -238,6 +238,30 @@ class TencentEffectApiAndroid implements TencentEffectApi {
   void enableEnhancedMode() {
     _channel.invokeMethod("enableEnhancedMode");
   }
+
+  @override
+  void setDowngradePerformance() {
+    _channel.invokeMethod("setDowngradePerformance");
+  }
+
+
+  @override
+  void setAudioMute(bool isMute) {
+    _channel.invokeMethod("setAudioMute", isMute);
+  }
+
+  @override
+  void setFeatureEnableDisable(String featureName, enable) {
+    var parameter = {featureName: enable};
+    _channel.invokeMethod("setFeatureEnableDisable", parameter);
+  }
+
+  @override
+  void setImageOrientation(TEImageOrientation orientation) {
+    _channel.invokeMethod("setImageOrientation", orientation.toType());
+  }
+
+
 
 
 

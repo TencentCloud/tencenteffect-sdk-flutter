@@ -84,9 +84,31 @@ static TencentEffectFlutterPlugin* _instance = nil;
   }else if ([@"enableEnhancedMode" isEqualToString:call.method]) {
       [[XmagicApiManager shareSingleton] enableEnhancedMode];
       result(nil);
+  }else if ([@"setDowngradePerformance" isEqualToString:call.method]) {
+      [[XmagicApiManager shareSingleton] setDowngradePerformance];
+      result(nil);
+  }else if ([@"setAudioMute" isEqualToString:call.method]) {
+      [[XmagicApiManager shareSingleton] setAudioMute:call.arguments];
+      result(nil);
+  }else if ([@"setFeatureEnableDisable" isEqualToString:call.method]) {
+      if([call.arguments isKindOfClass:[NSDictionary class]]){
+          [self setFeatureEnableDisable:(NSDictionary *)call.arguments];
+      }
+      result(nil);
+  }else if ([@"setImageOrientation" isEqualToString:call.method]) {
+      [[XmagicApiManager shareSingleton] setImageOrientation:[call.arguments intValue]];
+      result(nil);
   }else {
     result(FlutterMethodNotImplemented);
   }
+}
+
+-(void)setFeatureEnableDisable:(NSDictionary *)dic{
+    NSArray *featureNames = [dic allKeys];
+    for (NSString *featureName in featureNames) {
+        BOOL enable = [[dic valueForKey:featureName] boolValue];
+        [[XmagicApiManager shareSingleton] setFeatureEnableDisable:featureName enable:enable];
+    }
 }
 
 -(void)setLicense:(NSString *)licenseKey licenseUrl:(NSString *)licenseUrl{

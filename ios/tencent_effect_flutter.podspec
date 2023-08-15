@@ -16,7 +16,8 @@ A new Flutter project.
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  s.dependency 'XMagic'
+#  s.dependency 'XMagic'
+  s.dependency 'TencentEffect_All'
   s.dependency 'TXCustomBeautyProcesserPlugin','1.0.2'
   s.platform = :ios, '9.0'
   s.static_framework = true

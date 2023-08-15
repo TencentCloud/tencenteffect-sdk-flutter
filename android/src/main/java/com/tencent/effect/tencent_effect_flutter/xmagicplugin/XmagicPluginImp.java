@@ -8,16 +8,19 @@ import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.Log;
 
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.tencent.effect.tencent_effect_flutter.utils.LogUtils;
 import com.tencent.xmagic.XmagicProperty;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding;
 import io.flutter.plugin.common.EventChannel;
@@ -39,10 +42,12 @@ public class XmagicPluginImp implements XmagicPlugin {
     private Context applicationContext = null;
     private final Handler handler = new Handler(Looper.getMainLooper());
 
+    private final Gson gson = new Gson();
+
 
     public XmagicPluginImp(FlutterPluginBinding flutterPluginBinding) {
         applicationContext = flutterPluginBinding.getApplicationContext();
-        XmagicApiManager.getInstance().setmApplicationContext(applicationContext);
+        XmagicApiManager.getInstance().setApplicationContext(applicationContext);
         XmagicApiManager.getInstance().setManagerListener(new XmagicManagerListener() {
             @Override
             public void onXmagicPropertyError(String errorMsg, int code) {
@@ -108,11 +113,11 @@ public class XmagicPluginImp implements XmagicPlugin {
      */
     @Override
     public void initXmagic(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
-        Log.i(TAG, "start init xmagic resource ");
+        LogUtils.d(TAG, "start init xmagic resource ");
         if (call.arguments instanceof Map) {
             Map<String, String> map = (Map<String, String>) call.arguments;
             String resPathDir = map.get("pathDir");
-            Log.i(TAG, "method initXmagic resPathDir = " + resPathDir);
+            LogUtils.d(TAG, "method initXmagic resPathDir = " + resPathDir);
             XmagicApiManager.getInstance().initModelResource(applicationContext,resPathDir, isCopySuccess -> {
                 handler.post(() -> sendBoolData("initXmagic", isCopySuccess));
             });
@@ -217,11 +222,11 @@ public class XmagicPluginImp implements XmagicPlugin {
     public void updateProperty(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         if (call.arguments instanceof String) {
             String propertyStr = (String) call.arguments;
-            Log.i(TAG, "updateProperty method parameter is " + propertyStr);
+            LogUtils.d(TAG, "updateProperty method parameter is " + propertyStr);
             if (!TextUtils.isEmpty(propertyStr)) {
                 Type type = new TypeToken<XmagicProperty<XmagicProperty.XmagicPropertyValues>>() {
                 }.getType();
-                XmagicProperty<XmagicProperty.XmagicPropertyValues> property = new Gson().fromJson(propertyStr, type);
+                XmagicProperty<XmagicProperty.XmagicPropertyValues> property = gson.fromJson(propertyStr, type);
                 if (property != null) {
                     XmagicApiManager.getInstance().updateProperty(property);
                     result.success(null);
@@ -244,11 +249,10 @@ public class XmagicPluginImp implements XmagicPlugin {
             String parameter = (String) call.arguments;
             Type type = new TypeToken<List<XmagicProperty<XmagicProperty.XmagicPropertyValues>>>() {
             }.getType();
-            Gson gson = new Gson();
             List<XmagicProperty<?>> data = gson.fromJson(parameter, type);
             XmagicApiManager.getInstance().isBeautyAuthorized(data);
             String resultStr = gson.toJson(data);
-            Log.i(TAG, "isBeautyAuthorized resultStr = " + resultStr);
+            LogUtils.d(TAG, "isBeautyAuthorized resultStr = " + resultStr);
             result.success(resultStr);
             return;
         }
@@ -274,7 +278,6 @@ public class XmagicPluginImp implements XmagicPlugin {
      */
     @Override
     public void getDeviceAbilities(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
-        Gson gson = new Gson();
         Map<String, Boolean> resultData = XmagicApiManager.getInstance().getDeviceAbilities();
         result.success(gson.toJson(resultData));
     }
@@ -291,12 +294,11 @@ public class XmagicPluginImp implements XmagicPlugin {
             String parameter = (String) call.arguments;
             Type type = new TypeToken<List<XmagicProperty<?>>>() {
             }.getType();
-            Gson gson = new Gson();
             List<XmagicProperty<?>> data = gson.fromJson(parameter, type);
             Map<XmagicProperty<?>, ArrayList<String>> resultData = XmagicApiManager.getInstance()
                     .getPropertyRequiredAbilities(data);
-            Type type2 = new TypeToken<Map<XmagicProperty<?>, ArrayList<String>>>() {
-            }.getType();
+//            Type type2 = new TypeToken<Map<XmagicProperty<?>, ArrayList<String>>>() {
+//            }.getType();
             Map<String,ArrayList<String>> resultMap = new ArrayMap<>();
 
             for (XmagicProperty<?> key: resultData.keySet()) {
@@ -322,7 +324,6 @@ public class XmagicPluginImp implements XmagicPlugin {
             String parameter = (String) call.arguments;
             Type type = new TypeToken<List<XmagicProperty<?>>>() {
             }.getType();
-            Gson gson = new Gson();
             List<XmagicProperty<?>> data = gson.fromJson(parameter, type);
             XmagicApiManager.getInstance().isDeviceSupport(data);
             String resultData = gson.toJson(data);
@@ -339,6 +340,104 @@ public class XmagicPluginImp implements XmagicPlugin {
     }
 
 
+    @Override
+    public void setDowngradePerformance(@NonNull MethodCall call, @NonNull MethodChannel.Result result){
+        XmagicApiManager.getInstance().setDowngradePerformance();
+        result.success(true);
+    }
+
+
+    @Override
+    public void setAudioMute(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        if (call.arguments instanceof Boolean) {
+            boolean isMute = (boolean) call.arguments;
+            XmagicApiManager.getInstance().setAudioMute(isMute);
+            result.success(true);
+        }else {
+            resultParameterError(call.method, result);
+        }
+    }
+
+    @Override
+    public void setFeatureEnableDisable(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        boolean isSuccess = false;
+        if (call.arguments instanceof Map) {
+            try {
+                Map<String, Boolean> map = (Map<String, Boolean>) call.arguments;
+                Set<String> keys = map.keySet();
+                for (String key : keys) {
+                    if (map.get(key) == null) {
+                        LogUtils.e(TAG, "setFeatureEnableDisable  key = " + key + "  value is null");
+                        break;
+                    }
+                    XmagicApiManager.getInstance().setFeatureEnableDisable(key, Boolean.TRUE.equals(map.get(key)));
+                }
+                isSuccess = true;
+            } catch (Exception ignored) {
+                ignored.printStackTrace();
+            }
+        }
+        if (isSuccess) {
+            result.success(true);
+        } else {
+            resultParameterError(call.method, result);
+        }
+    }
+
+    @Override
+    public void setImageOrientation(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        boolean isSuccess = false;
+        if (call.arguments instanceof Integer) {
+            try {
+                int orientation = (int) call.arguments;
+                XmagicApiManager.getInstance().setImageOrientation(orientation);
+                isSuccess = true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (isSuccess) {
+                    result.success(null);
+                } else {
+                    resultParameterError(call.method, result);
+                }
+            }
+        } else {
+            resultParameterError(call.method, result);
+        }
+    }
+
+    @Override
+    public void enableAIDataListener(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        if (call.arguments instanceof Boolean) {
+            boolean isMute = (boolean) call.arguments;
+            XmagicApiManager.getInstance().enableAIDataListener(isMute);
+            result.success(true);
+        }else {
+            resultParameterError(call.method, result);
+        }
+    }
+
+    @Override
+    public void enableYTDataListener(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        if (call.arguments instanceof Boolean) {
+            boolean isMute = (boolean) call.arguments;
+            XmagicApiManager.getInstance().enableYTDataListener(isMute);
+            result.success(true);
+        }else {
+            resultParameterError(call.method, result);
+        }
+    }
+
+    @Override
+    public void enableTipsListener(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        if (call.arguments instanceof Boolean) {
+            boolean isMute = (boolean) call.arguments;
+            XmagicApiManager.getInstance().enableTipsListener(isMute);
+            result.success(true);
+        }else {
+            resultParameterError(call.method, result);
+        }
+    }
 
 
     private void sendBoolData(String methodName, boolean data) {
@@ -370,6 +469,7 @@ public class XmagicPluginImp implements XmagicPlugin {
 
 
     private void resultParameterError(String methodName, MethodChannel.Result result) {
+        LogUtils.d(TAG, methodName + "method parameter invalid ");
         result.error(methodName + " method parameter invalid", "-1", null);
     }
 

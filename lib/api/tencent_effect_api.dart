@@ -40,18 +40,30 @@ abstract class TencentEffectApi {
   ///开启美颜增强模式
   void enableEnhancedMode();
 
+  /// 开启性能模式。需要开启性能模式时，请在initXmagic前调用
+  void setDowngradePerformance();
+
+  ///背景音乐是否静音
+  void setAudioMute(bool isMute);
+
+  /// 设置某个特性的开或关   /**
+  void setFeatureEnableDisable(String featureName, bool enable);
+
+  ///设置画面方向
+  void setImageOrientation(TEImageOrientation orientation);
+
   ///更新美颜属性， 可在任意线程调用。
-  void updateProperty(XmagicProperty xmagicProperty);
+  void updateProperty(XmagicProperty property);
 
   ///设置创建美颜对象时的回调接口（如果出错会回调此接口）
   void setOnCreateXmagicApiErrorListener(
       OnCreateXmagicApiErrorListener? errorListener);
 
   ///设置动效提示语回调函数，用于将提示语展示到前端页面上。
-  void setTipsListener(XmagicTipsListener? xmagicTipsListener);
+  void setTipsListener(XmagicTipsListener? tipsListener);
 
-  ///设置人脸点位信息等数据回调（S1-05 和 S1-06 套餐才会有回调）
-  void setYTDataListener(XmagicYTDataListener? xmagicYTDataListener);
+  ///设置人脸点位信息等数据回调，需要获得人脸点位的 Licence 授权（例如原子能力X102）才会有回调。
+  void setYTDataListener(XmagicYTDataListener? ytDataListener);
 
   ///设置人脸、手势、身体检测状态回调。
   void setAIDataListener(XmagicAIDataListener? aiDataListener);
@@ -119,4 +131,26 @@ class LogLevel {
   static const int WARN = 5;
   static const int ERROR = 6;
   static const int ASSERT = 7;
+}
+
+enum TEImageOrientation {
+  ROTATION_0,
+  ROTATION_90,
+  ROTATION_180,
+  ROTATION_270,
+}
+
+extension TEImageOrientationExtension on TEImageOrientation {
+  int toType() {
+    switch (this) {
+      case TEImageOrientation.ROTATION_0:
+        return 0;
+      case TEImageOrientation.ROTATION_90:
+        return 1;
+      case TEImageOrientation.ROTATION_180:
+        return 2;
+      case TEImageOrientation.ROTATION_270:
+        return 3;
+    }
+  }
 }

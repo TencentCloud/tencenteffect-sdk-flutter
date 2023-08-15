@@ -4,6 +4,8 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
+import com.google.gson.Gson;
+import com.tencent.effect.tencent_effect_flutter.utils.LogUtils;
 import com.tencent.effect.tencent_effect_flutter.utils.RefInvoker;
 import com.tencent.effect.tencent_effect_flutter.xmagicplugin.XmagicPlugin;
 import com.tencent.effect.tencent_effect_flutter.xmagicplugin.XmagicPluginImp;
@@ -31,6 +33,9 @@ public class TencentEffectFlutterPlugin implements FlutterPlugin, MethodCallHand
     private EventChannel toFlutterChannel;
     private EventChannel.EventSink mEventSink;
     private XmagicPlugin xmagicPlugin;
+
+    private static String TAG = TencentEffectFlutterPlugin.class.getName();
+    private Gson gson = new Gson();
 
 
     static final String CALL_NATIVE_NAME = "tencent_effect_methodChannel_call_native";
@@ -66,6 +71,7 @@ public class TencentEffectFlutterPlugin implements FlutterPlugin, MethodCallHand
         if (TextUtils.isEmpty(methodName)) {
             result.notImplemented();
         }
+        LogUtils.d(TAG, methodName + "is call, parameter is  " + gson.toJson(call.arguments));
         RefInvoker.invokeMethod(xmagicPlugin,
                 xmagicPlugin.getClass().getName(),
                 methodName,

@@ -4,7 +4,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:orientation/orientation.dart';
 import 'package:tencent_effect_flutter/api/tencent_effect_api.dart';
 import 'package:tencent_effect_flutter/utils/Logs.dart';
 import '../utils/GenerateTestUserSig.dart';
@@ -17,8 +19,6 @@ import 'package:tencent_trtc_cloud/tx_audio_effect_manager.dart';
 import 'package:tencent_trtc_cloud/trtc_cloud_def.dart';
 import 'package:tencent_trtc_cloud/trtc_cloud_listener.dart';
 import '../view/pannel_view.dart';
-
-
 
 /// Meeting Page
 class TrtcCameraPreviewPage extends StatefulWidget {
@@ -56,7 +56,8 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
   int quality = TRTCCloudDef.TRTC_AUDIO_QUALITY_DEFAULT;
 
   bool _isOpenBeauty = true;
-
+  TEImageOrientation _orientation = TEImageOrientation.ROTATION_0;
+  StreamSubscription? _subscription;
   @override
   initState() {
     super.initState();
@@ -75,6 +76,7 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
     isOpenCamera = userSetting["enabledCamera"];
     isOpenMic = userSetting["enabledMicrophone"];
     iniRoom();
+    listenerOrientation();
   }
 
   iniRoom() async {
@@ -98,15 +100,56 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
     enableBeauty(_isOpenBeauty);
   }
 
+  ///监听设备方向
+  void listenerOrientation() {
+    _subscription = OrientationPlugin.onOrientationChange.listen((value) {
+      if (!mounted) return;
+      if (value == DeviceOrientation.landscapeLeft) {
+        if (_orientation == TEImageOrientation.ROTATION_90) {
+          return;
+        }
+        if (Platform.isIOS) {
+          _orientation = TEImageOrientation.ROTATION_270;
+        } else {
+          _orientation = TEImageOrientation.ROTATION_90;
+        }
+      } else if (value == DeviceOrientation.landscapeRight) {
+        if (_orientation == TEImageOrientation.ROTATION_270) {
+          return;
+        }
+        if (Platform.isIOS) {
+          _orientation = TEImageOrientation.ROTATION_90;
+        } else {
+          _orientation = TEImageOrientation.ROTATION_270;
+        }
+      } else if (value == DeviceOrientation.portraitUp) {
+        if (_orientation == TEImageOrientation.ROTATION_0) {
+          return;
+        }
+        _orientation = TEImageOrientation.ROTATION_0;
+      } else if (value == DeviceOrientation.portraitDown) {
+        if (_orientation == TEImageOrientation.ROTATION_180) {
+          return;
+        }
+        _orientation = TEImageOrientation.ROTATION_180;
+      }
+      TXLog.printlog("TEImageOrientation   ${_orientation.toType()}");
+      if (_isOpenBeauty) {
+        TencentEffectApi.getApi()?.setImageOrientation(_orientation);
+      }
+    });
+  }
+
   void _setBeautyListener() {
     TencentEffectApi.getApi()
         ?.setOnCreateXmagicApiErrorListener((errorMsg, code) {
-      TXLog.printlog("$TAG method is _setBeautyListener, errorMsg = $errorMsg , code = $code");
+      TXLog.printlog(
+          "$TAG method is _setBeautyListener, errorMsg = $errorMsg , code = $code");
     });
 
     TencentEffectApi.getApi()?.setAIDataListener(XmagicAIDataListenerImp());
     TencentEffectApi.getApi()?.setYTDataListener((data) {
-      TXLog.printlog("$TAG mtthod is setYTDataListener ,result data: $data");
+      TXLog.printlog("$TAG method is setYTDataListener ,result data: $data");
     });
     TencentEffectApi.getApi()?.setTipsListener(XmagicTipsListenerImp());
   }
@@ -212,8 +255,9 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
 
   @override
   dispose() async {
+    _subscription?.cancel();
     destoryRoom();
-    WidgetsBinding.instance?.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -232,10 +276,10 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
       }
     }
     if (type == TRTCCloudListener.onEnterRoom && param > 0) {
-        MeetingTool.toast('Enter room success', context);
+      MeetingTool.toast('Enter room success', context);
     }
-    if (type == TRTCCloudListener.onExitRoom&&param > 0) {
-        MeetingTool.toast('Exit room success', context);
+    if (type == TRTCCloudListener.onExitRoom && param > 0) {
+      MeetingTool.toast('Exit room success', context);
     }
     // Remote user entry
     if (type == TRTCCloudListener.onRemoteUserEnterRoom) {
@@ -268,7 +312,7 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
     _onRtcListener(type, param);
   }
 
-  _onRtcListener(type, param) async{
+  _onRtcListener(type, param) async {
     if (type == TRTCCloudListener.onUserVideoAvailable) {
       String userId = param['userId'];
 
@@ -325,7 +369,6 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
       meetModel.setList(userList);
     }
   }
-
 
   Future<bool?> showErrordDialog(errorMsg) {
     return showDialog<bool>(
@@ -465,7 +508,7 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: <Widget>[
-          TextButton(
+              TextButton(
                   child: const Text('Beauty Settings'),
                   onPressed: () {
                     _showModalBeautySheet(context);
@@ -614,9 +657,11 @@ class XmagicAIDataListenerImp extends XmagicAIDataListener {
 class XmagicTipsListenerImp extends XmagicTipsListener {
   @override
   void tipsNeedHide(String tips, String tipsIcon, int type) {
-    Fluttertoast.showToast(msg: tips);
+    TXLog.printlog("tipsNeedHide = $tips   ");
   }
 
   @override
-  void tipsNeedShow(String tips, String tipsIcon, int type, int duration) {}
+  void tipsNeedShow(String tips, String tipsIcon, int type, int duration) {
+    Fluttertoast.showToast(msg: tips);
+  }
 }

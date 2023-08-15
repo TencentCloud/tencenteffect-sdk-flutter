@@ -59,7 +59,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
 
   bool _isOpenBeauty = true;
   bool? _isFrontCamera = true;
-
+  bool _isMute = false;
   Map<String, List<XmagicUIProperty>>? data;
   String resultMsg = "";
   @override
@@ -389,37 +389,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
                   padding: const EdgeInsets.symmetric(horizontal: 0.0),
                   child: Column(
                     children: <Widget>[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'ON/OFF Beauty',
-                            style: TextStyle(color: Colors.white, fontSize: 15),
-                          ),
-                          Switch(
-                            value: _isOpenBeauty,
-                            onChanged: (value) {
-                              setState(() {
-                                _isOpenBeauty = value;
-                              });
-                              enableBeauty(value);
-                            },
-                          ),
-                          const Text(
-                            'Camera',
-                            style: TextStyle(color: Colors.white, fontSize: 15),
-                          ),
-                          Switch(
-                            value: _isFrontCamera!,
-                            onChanged: (value) {
-                              setState(() {
-                                _isFrontCamera = value;
-                              });
-                              _switchCamera();
-                            },
-                          )
-                        ],
-                      ),
+                      _createSwitchLayout(context),
                       Padding(
                         padding: const EdgeInsets.only(top: 0.0),
                         child: SizedBox(
@@ -775,6 +745,71 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
           ),
         ),
       ),
+    );
+  }
+
+  Widget _createSwitchLayout(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            const Text(
+              'ON/OFF Beauty',
+              style: TextStyle(color: Colors.white, fontSize: 15),
+            ),
+            Switch(
+              value: _isOpenBeauty,
+              onChanged: (value) {
+                setState(() {
+                  _isOpenBeauty = value;
+                });
+                enableBeauty(value);
+              },
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 10.0),
+          child: Column(
+            children: [
+              const Text(
+                'Camera',
+                style: TextStyle(color: Colors.white, fontSize: 15),
+              ),
+              Switch(
+                value: _isFrontCamera!,
+                onChanged: (value) {
+                  setState(() {
+                    _isFrontCamera = value;
+                  });
+                  _switchCamera();
+                },
+              )
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 10.0),
+          child: Column(
+            children: [
+              const Text(
+                'AudioMute',
+                style: TextStyle(color: Colors.white, fontSize: 15),
+              ),
+              Switch(
+                value: _isMute,
+                onChanged: (value) {
+                  setState(() {
+                    _isMute = value;
+                  });
+                   TencentEffectApi.getApi()?.setAudioMute(value);
+                },
+              )
+            ],
+          ),
+        )
+      ],
     );
   }
 

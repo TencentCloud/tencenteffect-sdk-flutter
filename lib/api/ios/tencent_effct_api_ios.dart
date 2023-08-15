@@ -229,4 +229,25 @@ class TencentEffectApiIOS implements TencentEffectApi {
     });
     return resultData;
   }
+
+  @override
+  void setDowngradePerformance() {
+    _channel.invokeMethod("setDowngradePerformance");
+  }
+
+  @override
+  void setAudioMute(bool isMute) {
+    _channel.invokeMethod("setAudioMute", isMute);
+  }
+
+  @override
+  void setFeatureEnableDisable(String featureName, enable) {
+    var parameter = {featureName: enable};
+    _channel.invokeMethod("setFeatureEnableDisable", parameter);
+  }
+
+  @override
+  void setImageOrientation(TEImageOrientation orientation) {
+    _channel.invokeMethod("setImageOrientation", orientation.toType());
+  }
 }
