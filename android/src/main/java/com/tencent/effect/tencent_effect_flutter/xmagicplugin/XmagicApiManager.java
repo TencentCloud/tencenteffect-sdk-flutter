@@ -374,7 +374,7 @@ public class XmagicApiManager implements SensorEventListener {
      *
      * @return
      */
-    private boolean xMagicApiIsNull() {
+    public boolean xMagicApiIsNull() {
         return xmagicApi == null;
     }
 
