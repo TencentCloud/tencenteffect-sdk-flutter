@@ -35,6 +35,7 @@ static const int MAX_SEG_VIDEO_DURATION = 200 * 1000;//视频长度限制
 @property (nonatomic, strong) NSString                  *makeup;//设置美妆时，只需要进行一次动效设置
 @property (nonatomic, strong) NSArray *resNames;  //resource name
 @property (nonatomic, strong) NSLock  *lock;
+@property (nonatomic, assign) BOOL highPerfoemance;
 
 @end
 
@@ -167,27 +168,34 @@ static XmagicApiManager *shareSingleton = nil;
     }
 }
 
+- (void)setDowngradePerformance{
+    self.highPerfoemance = YES;
+}
+
+- (void)setFeatureEnableDisable:(NSString *)featureName enable:(BOOL)enable{
+    if (self.xMagicApi != nil) {
+        [self.xMagicApi setFeatureEnableDisable:featureName enable:enable];
+    }
+}
+
+- (void)setAudioMute:(BOOL)mute{
+    if (self.xMagicApi != nil) {
+        [self.xMagicApi setAudioMute:mute];
+    }
+}
+
+- (void)setImageOrientation:(int)orientation{
+    if (self.xMagicApi != nil) {
+        [self.xMagicApi setImageOrientation:(YtLightDeviceCameraOrientation)orientation];
+    }
+}
+
 //build sdk
 //创建sdk
 - (void)buildBeautySDK:(int)width and:(int)height texture:(unsigned)textureID {
-    NSString *beautyConfigPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject];
-    beautyConfigPath = [beautyConfigPath stringByAppendingPathComponent:@"beauty_config.json"];
-    NSFileManager *localFileManager=[[NSFileManager alloc] init];
-    BOOL isDir = YES;
-    NSDictionary * beautyConfigJson = @{};
-    if ([localFileManager fileExistsAtPath:beautyConfigPath isDirectory:&isDir] && !isDir) {
-        NSString *beautyConfigJsonStr = [NSString stringWithContentsOfFile:beautyConfigPath encoding:NSUTF8StringEncoding error:nil];
-        NSError *jsonError;
-        NSData *objectData = [beautyConfigJsonStr dataUsingEncoding:NSUTF8StringEncoding];
-        beautyConfigJson = [NSJSONSerialization JSONObjectWithData:objectData
-        options:NSJSONReadingMutableContainers error:&jsonError];
-    }
     NSDictionary *assetsDict = @{@"core_name":@"LightCore.bundle",
                                  @"root_path":self.xmagicResPath,
-                                 @"plugin_3d":@"Light3DPlugin.bundle",
-                                 @"plugin_hand":@"LightHandPlugin.bundle",
-                                 @"plugin_segment":@"LightSegmentPlugin.bundle",
-                                 @"beauty_config":beautyConfigJson
+                                 @"setDowngradePerformance":@(self.highPerfoemance)
     };
 
     // Init beauty kit

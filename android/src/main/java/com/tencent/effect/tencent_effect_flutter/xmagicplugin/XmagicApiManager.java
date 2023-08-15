@@ -1,7 +1,6 @@
 package com.tencent.effect.tencent_effect_flutter.xmagicplugin;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -9,6 +8,7 @@ import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.tencent.effect.tencent_effect_flutter.res.XmagicResParser;
@@ -17,9 +17,12 @@ import com.tencent.xmagic.XmagicApi;
 import com.tencent.xmagic.XmagicApi.XmagicAIDataListener;
 import com.tencent.xmagic.XmagicApi.XmagicTipsListener;
 import com.tencent.xmagic.XmagicProperty;
+import com.tencent.xmagic.avatar.AvatarData;
 import com.tencent.xmagic.bean.TEBodyData;
 import com.tencent.xmagic.bean.TEFaceData;
 import com.tencent.xmagic.bean.TEHandData;
+import com.tencent.xmagic.bean.TEImageOrientation;
+import com.tencent.xmagic.listener.UpdatePropertyListener;
 import com.tencent.xmagic.telicense.TELicenseCheck;
 import com.tencent.xmagic.telicense.TELicenseCheck.TELicenseCheckListener;
 
@@ -27,6 +30,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import com.tencent.xmagic.XmagicConstant;
 
 
@@ -38,7 +42,7 @@ import com.tencent.xmagic.XmagicConstant;
 
 public class XmagicApiManager implements SensorEventListener {
 
-    private static final String TAG = "XMagicWrapper";
+    private static final String TAG = "XmagicApiManager";
 
     private XmagicApi xmagicApi;
     //判断当前手机旋转方向，用于手机在不同的旋转角度下都能正常的识别人脸
@@ -49,7 +53,17 @@ public class XmagicApiManager implements SensorEventListener {
 
     private int currentStreamType = XmagicApi.PROCESS_TYPE_CAMERA_STREAM;
 
+    private int xMagicLogLevel = Log.WARN;
 
+    //是否开启性能模式
+    private boolean isPerformance = false;
+
+    //是否开启AIDataListener回调
+    private volatile boolean enableAiData = false;
+    //是否开启YTDataListener回调
+    private volatile boolean enableYTData = false;
+    //是否开启tipsListener回调
+    private volatile boolean tipsListener = false;
     static class ClassHolder {
         static final XmagicApiManager INSTANCE = new XmagicApiManager();
     }
@@ -65,14 +79,14 @@ public class XmagicApiManager implements SensorEventListener {
      * @param context
      * @return
      */
-    public void initModelResource(Context context,String pathDir, InitModelResourceCallBack callBack) {
-        if(TextUtils.isEmpty(pathDir)){
+    public void initModelResource(Context context, String pathDir, InitModelResourceCallBack callBack) {
+        if (TextUtils.isEmpty(pathDir)) {
             if (callBack != null) {
                 callBack.onResult(false);
             }
             return;
         }
-        if(!new File(pathDir).exists()){
+        if (!new File(pathDir).exists()) {
             new File(pathDir).mkdirs();
         }
         XmagicResParser.setResPath(pathDir);
@@ -97,118 +111,168 @@ public class XmagicApiManager implements SensorEventListener {
     }
 
     public void createXmagicApi() {
-        xmagicApi = new XmagicApi(mApplicationContext, XmagicResParser.getResPath(), (s, i) -> {
+        XmagicApi api = new XmagicApi(mApplicationContext, XmagicResParser.getResPath(), (s, i) -> {
             if (managerListener != null) {
                 managerListener.onXmagicPropertyError(s, i);
             }
         });
         mSensorManager = (SensorManager) mApplicationContext.getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        xmagicApi.setAIDataListener(new XmagicAIDataListener() {
+        api.setAIDataListener(new XmagicAIDataListener() {
             @Override
             public void onFaceDataUpdated(List<TEFaceData> list) {
-                if (list == null) {
+                if (!enableAiData || list == null || managerListener == null) {
                     return;
                 }
-                if (managerListener != null) {
-                    managerListener.onFaceDataUpdated(new Gson().toJson(list));
-                }
+                managerListener.onFaceDataUpdated(new Gson().toJson(list));
             }
 
             @Override
             public void onHandDataUpdated(List<TEHandData> list) {
-                if (list == null) {
+                if (!enableAiData || list == null || managerListener == null) {
                     return;
                 }
-                if (managerListener != null) {
-                    managerListener.onHandDataUpdated(new Gson().toJson(list));
-                }
+                managerListener.onHandDataUpdated(new Gson().toJson(list));
             }
 
             @Override
             public void onBodyDataUpdated(List<TEBodyData> list) {
-                if (list == null) {
+                if (!enableAiData || list == null || managerListener == null) {
                     return;
                 }
-                if (managerListener != null) {
-                    managerListener.onBodyDataUpdated(new Gson().toJson(list));
-                }
+                managerListener.onBodyDataUpdated(new Gson().toJson(list));
             }
 
             @Override
             public void onAIDataUpdated(String s) {
-                if (managerListener != null) {
+                if (enableYTData && managerListener != null) {
                     managerListener.onYTDataUpdate(s);
                 }
             }
         });
-        xmagicApi.setTipsListener(new XmagicTipsListener() {
+        api.setTipsListener(new XmagicTipsListener() {
             @Override
             public void tipsNeedShow(String tips, String tipsIcon, int type, int duration) {
-                if (managerListener != null) {
+                if (tipsListener && managerListener != null) {
                     managerListener.tipsNeedShow(tips, tipsIcon, type, duration);
                 }
             }
 
             @Override
             public void tipsNeedHide(String tips, String tipsIcon, int type) {
-                if (managerListener != null) {
+                if (tipsListener && managerListener != null) {
                     managerListener.tipsNeedHide(tips, tipsIcon, type);
                 }
             }
         });
-
+        api.setXmagicLogLevel(xMagicLogLevel);
+        if (isPerformance) {
+            api.setDowngradePerformance();
+        }
         XmagicProperty.XmagicPropertyValues values = new XmagicProperty.XmagicPropertyValues(0, 100, 1, 0, 1);
         String effKey = XmagicConstant.BeautyConstant.BEAUTY_WHITEN;
-        xmagicApi.updateProperty(new XmagicProperty<>(XmagicProperty.Category.BEAUTY, null, null, effKey, values));
+        api.updateProperty(new XmagicProperty<>(XmagicProperty.Category.BEAUTY, null, null, effKey, values));
+        xmagicApi = api;
     }
 
     public void setXMagicStreamType(int type) {
-        if (xmagicApi != null) {
-            xmagicApi.setXmagicStreamType(type);
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "setXMagicStreamType: xmagicApi is null ");
+            return;
         }
+        xmagicApi.setXmagicStreamType(type);
     }
 
     public void setXmagicLogLevel(int level) {
-        if (xmagicApi != null) {
-            xmagicApi.setXmagicLogLevel(level);
+        LogUtils.setLogLevel(level);
+        xMagicLogLevel = level;
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "setXmagicLogLevel: xmagicApi is null ");
+            return;
         }
+        xmagicApi.setXmagicLogLevel(level);
     }
 
     public void onResume() {
         if (xmagicApi != null) {
             xmagicApi.onResume();
-            if (mSensorManager != null) {
-                mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-            }
+        } else {
+            LogUtils.e(TAG, "onResume: xmagicApi is null ");
+        }
+        if (mSensorManager != null) {
+            mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        } else {
+            LogUtils.e(TAG, "onResume: mSensorManager is null ");
         }
     }
 
     public void onPause() {
         if (xmagicApi != null) {
             xmagicApi.onPause();
-            if (mSensorManager != null) {
-                mSensorManager.unregisterListener(this);
-            }
+        } else {
+            LogUtils.e(TAG, "onPause: xmagicApi is null ");
+        }
+        if (mSensorManager != null) {
+            mSensorManager.unregisterListener(this);
+        } else {
+            LogUtils.e(TAG, "onPause: mSensorManager is null ");
         }
     }
 
     public void onDestroy() {
-        if (xmagicApi != null) {
-            currentStreamType = XmagicApi.PROCESS_TYPE_CAMERA_STREAM;
-            xmagicApi.onDestroy();
-            xmagicApi = null;
+        enableAiData = false;
+        enableYTData = false;
+        tipsListener = false;
+        isPerformance = false;
+        currentStreamType = XmagicApi.PROCESS_TYPE_CAMERA_STREAM;
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "onDestroy: xmagicApi is null ");
+            return;
         }
+        xmagicApi.setTipsListener(null);
+        xmagicApi.setAIDataListener(null);
+        xmagicApi.onDestroy();
+        xmagicApi = null;
     }
 
     public void updateProperty(XmagicProperty<XmagicProperty.XmagicPropertyValues> xmagicProperty) {
-        if (xmagicApi != null) {
-            xmagicApi.updateProperty(xmagicProperty);
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "updateProperty: xmagicApi is null ");
+            return;
         }
+        xmagicApi.updateProperty(xmagicProperty, new UpdatePropertyListener() {
+            Gson gson = new Gson();
+
+            @Override
+            public void onAvatarCustomConfigParsingFailed(List<XmagicProperty<?>> list) {
+                LogUtils.e(TAG, "updateProperty: onAvatarCustomConfigParsingFailed " + gson.toJson(list));
+            }
+
+            @Override
+            public void onPropertyInvalid(List<XmagicProperty<?>> list) {
+                LogUtils.e(TAG, "updateProperty: onPropertyInvalid " + gson.toJson(list));
+            }
+
+            @Override
+            public void onPropertyNotSupport(List<XmagicProperty<?>> list) {
+                LogUtils.e(TAG, "updateProperty: onPropertyNotSupport " + gson.toJson(list));
+            }
+
+            @Override
+            public void onAvatarDataInvalid(List<AvatarData> list) {
+                LogUtils.e(TAG, "updateProperty: onAvatarDataInvalid " + gson.toJson(list));
+            }
+
+            @Override
+            public void onAssetLoadFinish(String s, boolean b) {
+                LogUtils.e(TAG, "updateProperty: onAssetLoadFinish " + s + "  " + b);
+            }
+        });
     }
 
     public int process(int textureId, int width, int height) {
-        if (xmagicApi == null) {
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "process: xmagicApi is null ");
             return textureId;
         }
         if (currentStreamType != XmagicApi.PROCESS_TYPE_CAMERA_STREAM) {
@@ -218,20 +282,6 @@ public class XmagicApiManager implements SensorEventListener {
         return xmagicApi.process(textureId, width, height);
     }
 
-    public Bitmap process(Bitmap bitmap){
-        if (xmagicApi == null || bitmap == null ) {
-            return bitmap;
-        }
-        if (currentStreamType != XmagicApi.PROCESS_TYPE_PICTURE_DATA) {
-            currentStreamType = XmagicApi.PROCESS_TYPE_PICTURE_DATA;
-            setXMagicStreamType(currentStreamType);
-        }
-        //TODO 此处需要优化  true不能写死，后期要进行修改
-        return xmagicApi.process(bitmap, true);
-    }
-
-
-
 
 
     /**
@@ -240,8 +290,8 @@ public class XmagicApiManager implements SensorEventListener {
      * @param properties
      */
     public void isBeautyAuthorized(List<XmagicProperty<?>> properties) {
-        if (xmagicApi == null) {
-            LogUtils.e(TAG, "isBeautyAuthorized  xmagicApi == null ");
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "isBeautyAuthorized: xmagicApi is null ");
             return;
         }
         xmagicApi.isBeautyAuthorized(properties);
@@ -254,7 +304,8 @@ public class XmagicApiManager implements SensorEventListener {
      * @return
      */
     public boolean isSupportBeauty() {
-        if (xmagicApi == null) {
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "isSupportBeauty: xmagicApi is null ");
             return true;
         }
         return xmagicApi.isSupportBeauty();
@@ -267,7 +318,8 @@ public class XmagicApiManager implements SensorEventListener {
      * @param assetsList
      */
     public void isDeviceSupport(List<XmagicProperty<?>> assetsList) {
-        if (xmagicApi == null) {
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "isDeviceSupport: xmagicApi is null ");
             return;
         }
         xmagicApi.isDeviceSupport(assetsList);
@@ -280,7 +332,8 @@ public class XmagicApiManager implements SensorEventListener {
      * @return
      */
     public Map<XmagicProperty<?>, ArrayList<String>> getPropertyRequiredAbilities(List<XmagicProperty<?>> assets) {
-        if (xmagicApi == null) {
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "getPropertyRequiredAbilities: xmagicApi is null ");
             return null;
         }
         return xmagicApi.getPropertyRequiredAbilities(assets);
@@ -312,7 +365,7 @@ public class XmagicApiManager implements SensorEventListener {
     }
 
 
-    public void setmApplicationContext(Context context) {
+    public void setApplicationContext(Context context) {
         mApplicationContext = context;
     }
 
@@ -321,7 +374,7 @@ public class XmagicApiManager implements SensorEventListener {
      *
      * @return
      */
-    public boolean xmagicApiIsNull() {
+    private boolean xMagicApiIsNull() {
         return xmagicApi == null;
     }
 
@@ -334,11 +387,134 @@ public class XmagicApiManager implements SensorEventListener {
     }
 
 
+    /**
+     * 开启增强模式
+     */
     public void enableEnhancedMode() {
-        if (xmagicApi != null) {
-            xmagicApi.enableEnhancedMode();
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "enableEnhancedMode: xmagicApi is null ");
+            return;
         }
+        xmagicApi.enableEnhancedMode();
     }
+
+
+
+    /**
+     * 开启性能模式
+     */
+    public void setDowngradePerformance() {
+        isPerformance = true;
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "setDowngradePerformance: xmagicApi is null ");
+            return;
+        }
+        xmagicApi.setDowngradePerformance();
+    }
+
+    /**
+     * 暂停声音
+     */
+    public void onPauseAudio() {
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "onPauseAudio: xmagicApi is null ");
+            return;
+        }
+        xmagicApi.onPauseAudio();
+    }
+
+    /**
+     * 关闭或开启声音
+     *
+     * @param isMute
+     */
+    public void setAudioMute(boolean isMute) {
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "setAudioMute: xmagicApi is null ");
+            return;
+        }
+        xmagicApi.setAudioMute(isMute);
+    }
+
+    /**
+     * 设置某个特性的开或关
+     *
+     * @param featureName 取值见 XmagicConstant.FeatureName
+     * @param enable
+     */
+    public void setFeatureEnableDisable(String featureName, boolean enable) {
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "setFeatureEnableDisable: xmagicApi is null ");
+            return;
+        }
+        xmagicApi.setFeatureEnableDisable(featureName, enable);
+    }
+
+
+    /**
+     * 设置方向
+     * @param rotationType 0，1，2，3 分别代表 0，90，180，270
+     */
+    public void setImageOrientation(int rotationType) {
+        TEImageOrientation orientation = null;
+        switch (rotationType) {
+            case 0:
+                orientation = TEImageOrientation.ROTATION_0;
+                break;
+            case 1:
+                orientation = TEImageOrientation.ROTATION_90;
+                break;
+            case 2:
+                orientation = TEImageOrientation.ROTATION_180;
+                break;
+            case 3:
+                orientation = TEImageOrientation.ROTATION_270;
+                break;
+            default:
+                LogUtils.e(TAG, "setImageOrientation: rotationType = " + rotationType);
+                return;
+        }
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "setImageOrientation: xmagicApi is null ");
+            return;
+        }
+        if (mSensorManager != null) {
+            mSensorManager.unregisterListener(this);
+            mSensorManager = null;
+        }
+        xmagicApi.setImageOrientation(orientation);
+    }
+
+    /**
+     * 是否开启AIDataListener 回调
+     *
+     * @param enable true 表示开启，false 表示关闭
+     */
+    public void enableAIDataListener(boolean enable) {
+        this.enableAiData = enable;
+        LogUtils.d(TAG, "enableAIDataListener: enable = " + enable);
+    }
+
+    /**
+     * 是否开启YTDataListener 回调
+     *
+     * @param enable true 表示开启，false 表示关闭
+     */
+    public void enableYTDataListener(boolean enable) {
+        this.enableYTData = enable;
+        LogUtils.d(TAG, "enableYTDataListener: enable = " + enable);
+    }
+
+    /**
+     * 是否开启tipsListener 回调
+     *
+     * @param enable true 表示开启，false 表示关闭
+     */
+    public void enableTipsListener(boolean enable) {
+        this.tipsListener = enable;
+        LogUtils.d(TAG, "enableTipsListener: enable = " + enable);
+    }
+
 
     interface InitModelResourceCallBack {
         void onResult(boolean isCopySuccess);

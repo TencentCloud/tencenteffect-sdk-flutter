@@ -45,6 +45,18 @@ typedef void (^eventYTDataCallBlock)(id event);
 //开启美颜增强模式
 -(void)enableEnhancedMode;
 
+//美颜性能模式
+-(void)setDowngradePerformance;
+
+//背景音乐是否静音
+-(void)setAudioMute:(BOOL)mute;
+
+//设置某个特性的开或关
+- (void)setFeatureEnableDisable:(NSString *_Nonnull)featureName enable:(BOOL)enable;
+
+//设置画面方向
+- (void)setImageOrientation:(int)orientation;
+
 -(void)onPause;
 
 -(void)onResume;

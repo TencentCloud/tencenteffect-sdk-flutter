@@ -45,4 +45,16 @@ public interface XmagicPlugin {
 
     void enableEnhancedMode(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
 
+    void setDowngradePerformance(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
+
+    void setAudioMute(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
+
+    void setFeatureEnableDisable(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
+
+    void setImageOrientation(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
+    void enableAIDataListener(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
+    void enableYTDataListener(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
+    void enableTipsListener(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
+
+
 }
