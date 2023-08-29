@@ -4,6 +4,11 @@ package com.tencent.effect.tencent_effect_flutter.res;
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.tencent.effect.tencent_effect_flutter.utils.LogUtils;
+import com.tencent.xmagic.XmagicApi;
+import com.tencent.xmagic.util.FileUtil;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -70,32 +75,20 @@ public class XmagicResParser {
     public static boolean copyRes(Context context) {
         ensureResPathAlreadySet();
 
-        new File(sResPath, "light_assets").delete();
-        new File(sResPath, "light_material").delete();
-        new File(sResPath, "MotionRes").delete();
-
-        for (String path : new String[]{"Light3DPlugin", "LightCore", "LightHandPlugin", "LightBodyPlugin",
-                "LightSegmentPlugin"}) {
-            boolean result = copyAssets(context, path, sResPath + "light_assets");
-            if (!result) {
-                Log.d(TAG, "copyRes: fail,path=" + path + ",new path=" + sResPath + "light_assets");
-                return false;
-            }
-        }
-
+        int addResult = XmagicApi.addAiModeFilesFromAssets(context, sResPath);
+        LogUtils.e(TAG, "addAiModeFilesFromAssets result = " + addResult);
         for (String path : new String[]{"lut"}) {
-            boolean result = copyAssets(context, path, sResPath + "light_material" + File.separator + path);
+            boolean result = FileUtil.copyAssets(context, path, sResPath + "light_material" + File.separator + path);
             if (!result) {
-                Log.d(TAG, "copyRes: fail,path=" + path + ",new path=" + sResPath + "light_material" + File.separator
-                        + path);
+                LogUtils.d(TAG, "copyRes: fail,path=" + path + ",new path=" + sResPath + "light_material" + File.separator + path);
                 return false;
             }
         }
 
         for (String path : new String[]{"MotionRes"}) {
-            boolean result = copyAssets(context, path, sResPath + path);
+            boolean result = FileUtil.copyAssets(context, path, sResPath + path);
             if (!result) {
-                Log.d(TAG, "copyRes: fail,path=" + path + ",new path=" + sResPath + path);
+                LogUtils.d(TAG, "copyRes: fail,path=" + path + ",new path=" + sResPath + path);
                 return false;
             }
         }

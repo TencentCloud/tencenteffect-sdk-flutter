@@ -3,12 +3,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:tencent_effect_flutter/api/android/tencent_effect_api_android.dart';
 import 'package:tencent_effect_flutter/api/tencent_effect_api.dart';
 import 'package:tencent_effect_flutter/utils/Logs.dart';
 import 'package:tencent_effect_flutter_demo/languages/app_localization_delegate.dart';
 import 'package:tencent_effect_flutter_demo/page/superplayer_page.dart';
 import 'package:tencent_effect_flutter_demo/page/trtc_camera_preview_page.dart';
+import 'package:tencent_effect_flutter_demo/producer/beauty_property_producer_android.dart';
 import 'package:tencent_effect_flutter_demo/view/progress_dialog.dart';
 import 'producer/beauty_data_manager.dart';
 import 'page/live_camera_preview_page.dart';
@@ -94,6 +97,12 @@ class _HomeState extends State<HomePage> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                   ))),
+          // TextButton(
+          //     onPressed: () => {_onTestPressed(context)},
+          //     child: const Text('Test',
+          //         style: TextStyle(
+          //           fontWeight: FontWeight.bold,
+          //         ))),
         ],
       )),
     );
@@ -189,5 +198,37 @@ class _HomeState extends State<HomePage> {
         Navigator.of(context).pushNamed("/cameraBeautyPage_Trtc");
       }
     }
+  }
+
+
+  ///用于响应测试按钮的点击事件
+  _onTestPressed(BuildContext context) async {
+    ///用于测试复制模型bundle的方法（仅Android）
+    // Directory directory = await getApplicationSupportDirectory();
+    // String inputDir = directory.path + "${Platform.pathSeparator}temp_bundle";
+    // List<String> input = [
+    //   "$inputDir${Platform.pathSeparator}Light3DPlugin",
+    //   "$inputDir${Platform.pathSeparator}LightCore",
+    //   "$inputDir${Platform.pathSeparator}LightHandPlugin"
+    // ];
+    // String resPath = await BeautyPropertyProducerAndroid().getResPath();
+    // TencentEffectApiAndroid apiAndroid = TencentEffectApiAndroid();
+    // apiAndroid.addAiMode(input[0], resPath, (inputDir, code) {
+    //   TXLog.printlog("$TAG 打印复制资源文件的日志信息 $inputDir  $code");
+    //   apiAndroid.addAiMode(input[1], resPath, (inputDir, code) {
+    //     TXLog.printlog("$TAG 打印复制资源文件的日志信息 $inputDir  $code");
+    //     apiAndroid.addAiMode(input[2], resPath, (inputDir, code) {
+    //       TXLog.printlog("$TAG 打印复制资源文件的日志信息 $inputDir  $code");
+    //     });
+    //   });
+    // });
+
+
+    ///用于测试动态加载so的方法（仅Android）
+    // String resPath = await BeautyPropertyProducerAndroid().getResPath();
+    // TencentEffectApiAndroid apiAndroid = TencentEffectApiAndroid();
+    // bool result =await apiAndroid.setLibPathAndLoad("$resPath${Platform.pathSeparator}templib");
+    // TXLog.printlog("$TAG setLibPathAndLoad $result ");
+
   }
 }

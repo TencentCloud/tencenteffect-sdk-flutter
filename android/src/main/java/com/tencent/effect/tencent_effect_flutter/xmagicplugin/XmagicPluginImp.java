@@ -6,9 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.util.ArrayMap;
-import android.util.Log;
 
-import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
@@ -123,6 +121,43 @@ public class XmagicPluginImp implements XmagicPlugin {
             });
             result.success(null);
             return;
+        }
+        resultParameterError(call.method, result);
+    }
+
+    @Override
+    public void addAiMode(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        if (call.arguments instanceof Map) {
+            Map<String,String> map = (Map<String, String>)call.arguments;
+            String inputDir = map.get("input");
+            String resDir = map.get("res");
+            LogUtils.d(TAG, "addAiMode method parameter is: inputDir " + inputDir +"  resDir "+resDir);
+            if (!TextUtils.isEmpty(inputDir) && !TextUtils.isEmpty(resDir)) {
+                new Thread(() -> {
+                    int addResult = XmagicApiManager.addAiModeFiles(inputDir,resDir);
+                    LogUtils.d(TAG, "addAiMode method result is " + addResult);
+                    Map<String,Object> resultMap = new ArrayMap<>();
+                    resultMap.put("input",inputDir);
+                    resultMap.put("code",addResult);
+                    handler.post(() -> sendMapData("addAiMode", resultMap));
+                }).start();
+                result.success(null);
+                return ;
+            }
+        }
+        resultParameterError(call.method, result);
+    }
+
+    @Override
+    public void setLibPathAndLoad(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        if (call.arguments instanceof String) {
+            String path = (String) call.arguments;
+            LogUtils.d(TAG, "setLibPathAndLoad method parameter is " + path);
+            if (!TextUtils.isEmpty(path)) {
+                boolean loadResult = XmagicApiManager.setLibPathAndLoad(path);
+                result.success(loadResult);
+                return ;
+            }
         }
         resultParameterError(call.method, result);
     }

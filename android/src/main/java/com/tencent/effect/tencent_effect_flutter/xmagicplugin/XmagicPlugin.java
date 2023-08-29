@@ -22,6 +22,10 @@ public interface XmagicPlugin {
 
     void initXmagic(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
 
+    void addAiMode(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
+
+    void setLibPathAndLoad(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
+
     void setLicense(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
 
     void setXmagicLogLevel(@NonNull MethodCall call, @NonNull MethodChannel.Result result);

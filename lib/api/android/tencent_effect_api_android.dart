@@ -21,6 +21,7 @@ class TencentEffectApiAndroid implements TencentEffectApi {
   XmagicYTDataListener? _xMagicYTDataListener;
   LicenseCheckListener? _licenseCheckListener;
   InitXmagicCallBack? _initXMagicCallBack;
+  Map<String,AddAiModeCallBack> _addAiModeCallBackMap = new Map();
 
   TencentEffectApiAndroid() {
     EventChannel(EVENT_CHANNEL_NAME)
@@ -39,6 +40,15 @@ class TencentEffectApiAndroid implements TencentEffectApi {
           _initXMagicCallBack!(data);
           _initXMagicCallBack = null;
         }
+        break;
+      case "addAiMode":
+        Map map = parameter['data'];
+        String inputDir = map['input'] as String;
+        int code = map['code'] as int;
+        AddAiModeCallBack callBack =
+            _addAiModeCallBackMap[inputDir] as AddAiModeCallBack;
+        callBack!(inputDir, code);
+        _addAiModeCallBackMap.remove(inputDir);
         break;
       case "onLicenseCheckFinish":
         Map map = parameter['data'];
@@ -262,8 +272,18 @@ class TencentEffectApiAndroid implements TencentEffectApi {
   }
 
 
+  void addAiMode(String inputDir, String resDir, AddAiModeCallBack callBack) {
+    this._addAiModeCallBackMap[inputDir] = callBack;
+    Map<String,String> parameter = {"input": inputDir, "res": resDir};
+    _channel.invokeMethod("addAiMode",parameter );
+  }
 
 
+  Future<bool> setLibPathAndLoad(String libPath) async  {
+     var result = await _channel.invokeMethod("setLibPathAndLoad",libPath );
+     return result;
+  }
 
 
 }
+typedef AddAiModeCallBack = void Function(String inputDir, int code);
