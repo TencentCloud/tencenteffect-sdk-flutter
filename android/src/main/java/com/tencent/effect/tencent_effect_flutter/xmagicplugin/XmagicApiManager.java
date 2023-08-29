@@ -101,6 +101,14 @@ public class XmagicApiManager implements SensorEventListener {
     }
 
 
+    public static int addAiModeFiles(String inputDir, String resDir) {
+        return XmagicApi.addAiModeFiles(inputDir,resDir);
+    }
+
+    public static boolean setLibPathAndLoad(String libPath) {
+        return XmagicApi.setLibPathAndLoad(libPath);
+    }
+
     public void setTELicense(Context context, String url, String key, TELicenseCheckListener licenseCheckListener) {
         TELicenseCheck.getInstance().setTELicense(context, url, key, (errorCode, msg) -> {
             LogUtils.d(TAG, "onLicenseCheckFinish: errorCode=" + errorCode + ",msg=" + msg);
