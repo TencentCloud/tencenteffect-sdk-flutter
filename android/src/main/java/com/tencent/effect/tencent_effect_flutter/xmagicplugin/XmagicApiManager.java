@@ -177,9 +177,9 @@ public class XmagicApiManager implements SensorEventListener {
         if (isPerformance) {
             api.setDowngradePerformance();
         }
-        XmagicProperty.XmagicPropertyValues values = new XmagicProperty.XmagicPropertyValues(0, 100, 1, 0, 1);
-        String effKey = XmagicConstant.BeautyConstant.BEAUTY_WHITEN;
-        api.updateProperty(new XmagicProperty<>(XmagicProperty.Category.BEAUTY, null, null, effKey, values));
+    //    XmagicProperty.XmagicPropertyValues values = new XmagicProperty.XmagicPropertyValues(0, 100, 1, 0, 1);
+    //    String effKey = XmagicConstant.BeautyConstant.BEAUTY_WHITEN;
+    //    api.updateProperty(new XmagicProperty<>(XmagicProperty.Category.BEAUTY, null, null, effKey, values));
         xmagicApi = api;
     }
 
