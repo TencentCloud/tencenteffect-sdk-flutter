@@ -185,6 +185,8 @@ class XmagicUIProperty {
   String? thumbImagePath;
   String? uiCategory;
   String? rootDisplayName;
+  bool isUsed = false;
+  bool isChecked = false;
   List<XmagicUIProperty>? xmagicUIPropertyList;
 
   XmagicUIProperty({

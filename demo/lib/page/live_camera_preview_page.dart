@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:adaptive_action_sheet/adaptive_action_sheet.dart';
@@ -13,7 +12,7 @@ import 'package:live_flutter_plugin/widget/v2_tx_live_video_widget.dart';
 import 'package:tencent_effect_flutter/api/tencent_effect_api.dart';
 import 'package:tencent_effect_flutter/model/xmagic_property.dart';
 import 'package:tencent_effect_flutter/utils/Logs.dart';
-import 'package:tencent_effect_flutter_demo/view/pannel_view.dart';
+import 'package:tencent_effect_flutter_demo/view/panel_view.dart';
 import '../languages/AppLocalizations.dart';
 import '../producer/beauty_data_manager.dart';
 
@@ -60,7 +59,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
   bool _isOpenBeauty = true;
   bool? _isFrontCamera = true;
   bool _isMute = false;
-  Map<String, List<XmagicUIProperty>>? data;
+  Map<String, List<XmagicUIProperty>>? data; //所有的美颜属性
   String resultMsg = "";
   @override
   void initState() {
@@ -72,9 +71,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
 
   //获取测试使用的数据
   void _getAllData() async{
-    Map<String, List<XmagicUIProperty>>? data =
-    await BeautyDataManager.getInstance().getAllPannelData(context);
-    this.data = data;
+    data = await BeautyDataManager.getInstance().getAllPannelData(context);
   }
 
 
@@ -92,7 +89,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
   @override
   dispose() {
     debugPrint("Live-Camera push dispose");
-    WidgetsBinding.instance?.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -309,7 +306,7 @@ class _LiveCameraPushPageState extends State<LiveCameraPushPage>
       barrierColor: Colors.transparent,
       context: context,
       builder: (context) {
-        return const PannelView(null);
+        return PanelView(null,data);
       },
     );
   }
