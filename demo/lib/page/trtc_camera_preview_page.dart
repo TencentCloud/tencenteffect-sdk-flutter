@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:orientation/orientation.dart';
 import 'package:tencent_effect_flutter/api/tencent_effect_api.dart';
+import 'package:tencent_effect_flutter/model/xmagic_property.dart';
 import 'package:tencent_effect_flutter/utils/Logs.dart';
+import '../producer/beauty_data_manager.dart';
 import '../utils/GenerateTestUserSig.dart';
 import '../utils/mettings_model.dart';
 import '../utils/tool.dart';
@@ -18,7 +20,7 @@ import 'package:tencent_trtc_cloud/tx_device_manager.dart';
 import 'package:tencent_trtc_cloud/tx_audio_effect_manager.dart';
 import 'package:tencent_trtc_cloud/trtc_cloud_def.dart';
 import 'package:tencent_trtc_cloud/trtc_cloud_listener.dart';
-import '../view/pannel_view.dart';
+import '../view/panel_view.dart';
 
 /// Meeting Page
 class TrtcCameraPreviewPage extends StatefulWidget {
@@ -58,10 +60,14 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
   bool _isOpenBeauty = true;
   TEImageOrientation _orientation = TEImageOrientation.ROTATION_0;
   StreamSubscription? _subscription;
+
+  Map<String, List<XmagicUIProperty>>? _beautyProperties; //所有的美颜属性
+
+
   @override
   initState() {
     super.initState();
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
     meetModel = MeetingModel();
     meetModel.setUserSettig({
       "meetId": 1234,
@@ -77,6 +83,13 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
     isOpenMic = userSetting["enabledMicrophone"];
     iniRoom();
     listenerOrientation();
+    _getAllData();
+
+  }
+
+  //获取测试使用的数据
+  void _getAllData() async {
+    _beautyProperties = await BeautyDataManager.getInstance().getAllPannelData(context);
   }
 
   iniRoom() async {
@@ -165,11 +178,11 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
   ///打开美颜操作，true表示开启美颜，FALSE表示关闭美颜
   ///true is turn on,false is turn off
   Future<int?> enableBeauty(bool open) async {
-    if (open) {
-      _setBeautyListener();
-    } else {
-      _removeBeautyListener();
-    }
+    // if (open) {
+    //   _setBeautyListener();
+    // } else {
+    //   _removeBeautyListener();
+    // }
 
     return await trtcCloud.enableCustomVideoProcess(open);
   }
@@ -181,7 +194,7 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
         break;
       case AppLifecycleState
           .resumed: //Switch from the background to the foreground, and the interface is visible
-        if (!kIsWeb && Platform.isAndroid) {
+        if (!foundation.kIsWeb && Platform.isAndroid) {
           userListLast = jsonDecode(jsonEncode(userList));
           userList = [];
           screenUserList = MeetingTool.getScreenList(userList);
@@ -233,7 +246,7 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
       });
     }
     if (isOpenMic) {
-      if (kIsWeb) {
+      if (foundation.kIsWeb) {
         Future.delayed(const Duration(seconds: 2), () {
           trtcCloud.startLocalAudio(quality);
         });
@@ -247,7 +260,7 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
     setState(() {});
   }
 
-  destoryRoom() {
+  destroyRoom() {
     trtcCloud.unRegisterListener(onRtcListener);
     trtcCloud.exitRoom();
     TRTCCloud.destroySharedInstance();
@@ -256,7 +269,7 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
   @override
   dispose() async {
     _subscription?.cancel();
-    destoryRoom();
+    destroyRoom();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -369,6 +382,7 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
       meetModel.setList(userList);
     }
   }
+
 
   Future<bool?> showErrordDialog(errorMsg) {
     return showDialog<bool>(
@@ -490,15 +504,62 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
 
   /// 打开美颜面板
   /// show beauty pannel
-  void _showModalBeautySheet(BuildContext context) {
+  void _showModalBeautySheet(BuildContext context) async {
     showModalBottomSheet<void>(
       backgroundColor: Colors.transparent,
       barrierColor: Colors.transparent,
       context: context,
       builder: (context) {
-        return const PannelView(null);
+        return PanelView((property){
+          _updateLastMotionOrLut(property);
+        }, _beautyProperties) ;
       },
     );
+  }
+  XmagicProperty? _lastMotionProperty;
+  XmagicProperty? _lastLutUiProperty;
+  /// 用于保存最后一次设置的动效获取滤镜
+  _updateLastMotionOrLut(XmagicProperty? _xmagicProperty) {
+    if (_xmagicProperty?.category == Category.LUT) {
+      _lastLutUiProperty = _xmagicProperty;
+    } else if (_xmagicProperty?.category == Category.MOTION ||
+        _xmagicProperty?.category == Category.SEGMENTATION ||
+        _xmagicProperty?.category == Category.MAKEUP) {
+      _lastMotionProperty = _xmagicProperty;
+    }
+  }
+
+  ///获取设置过的属性
+  List<XmagicProperty> getLastBeautyProperties() {
+    List<XmagicUIProperty>? beautyData =
+    _beautyProperties?[Category.BEAUTY];
+    List<XmagicUIProperty>? bodyBeautyData =
+    _beautyProperties?[Category.BODY_BEAUTY];
+    List<XmagicProperty> resultList = [];
+    _getProperties(resultList, beautyData);
+    _getProperties(resultList, bodyBeautyData);
+    if (_lastLutUiProperty != null) {
+      resultList.add(_lastLutUiProperty!);
+    }
+
+    if (_lastMotionProperty != null) {
+      resultList.add(_lastMotionProperty!);
+    }
+    return resultList;
+  }
+
+  _getProperties(List<XmagicProperty> resultList,
+      List<XmagicUIProperty>? uiPropertiesList) {
+    if (uiPropertiesList == null) {
+      return;
+    }
+    for (XmagicUIProperty uiProperty in uiPropertiesList) {
+      if (uiProperty.xmagicUIPropertyList != null) {
+        _getProperties(resultList, uiProperty.xmagicUIPropertyList);
+      } else if (uiProperty.property != null && uiProperty.isUsed) {
+        resultList.add(uiProperty.property!);
+      }
+    }
   }
 
   Widget bottomSetting() {
@@ -513,6 +574,14 @@ class TrtcCameraPreviewPageState extends State<TrtcCameraPreviewPage>
                   onPressed: () {
                     _showModalBeautySheet(context);
                   }),
+              // TextButton(
+              //     child: const Text('Test Btn'),
+              //     onPressed: () {
+              //         List<XmagicProperty>? resultData= getLastBeautyProperties();
+              //         for(XmagicProperty property in resultData){
+              //           TXLog.printlog("getLastBeautyProperties = ${property.toJson()}");
+              //         }
+              //     }),
             ],
           ),
           height: 70.0,

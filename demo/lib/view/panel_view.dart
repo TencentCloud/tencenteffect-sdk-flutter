@@ -1,31 +1,63 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:tencent_effect_flutter/api/tencent_effect_api.dart';
+import 'package:tencent_effect_flutter/model/beauty_constant.dart';
 import 'package:tencent_effect_flutter/model/xmagic_property.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:tencent_effect_flutter_demo/languages/AppLocalizations.dart';
-import '../producer/beauty_data_manager.dart';
 
-class PannelView extends StatefulWidget {
-  final Function? _itemClickCallBack;
+typedef PanelViewCallBack = void Function(XmagicProperty property);
+class PanelView extends StatefulWidget {
+
+  final PanelViewCallBack? _itemClickCallBack;
 
   final int onSliderUpdateXmagicType; //默认表示在onChanged方法中回调  2.表示在onChangeEnd中调用
 
-  const PannelView(this._itemClickCallBack,
+  final Map<String, List<XmagicUIProperty>>? _beautyProperties;
+
+  const PanelView(this._itemClickCallBack, this._beautyProperties,
       {Key? key, this.onSliderUpdateXmagicType = 1})
       : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    return _PannelState();
+    return PanelState();
+  }
+
+
+  static PanelState? of(BuildContext context) {
+    final _PanelScope? scope = context.dependOnInheritedWidgetOfExactType<_PanelScope>();
+    return scope?._panelState;
   }
 }
 
-class _PannelState extends State<PannelView> {
+class _PanelScope extends InheritedWidget {
+  const _PanelScope({
+    Key? key,
+    required Widget child,
+    required PanelState panelState,
+    required int generation,
+  }) : _panelState = panelState,
+        _generation = generation,
+        super(key: key, child: child);
+
+  final PanelState _panelState;
+
+  /// Incremented every time a form field has changed. This lets us know when
+  /// to rebuild the form.
+  final int _generation;
+
+  /// The [Form] associated with this widget.
+  PanelView get form => _panelState.widget;
+
+  @override
+  bool updateShouldNotify(_PanelScope old) => _generation != old._generation;
+}
+
+class PanelState extends State<PanelView> {
   final ScrollController _scrollController = ScrollController();
   double _listViewOffect = 0;
-  Map<String, List<XmagicUIProperty>>? _datas;
   List<String> _beautyTypes = [];
   bool _isShowSeekBar = false;
   double _progressMin = 0;
@@ -35,34 +67,59 @@ class _PannelState extends State<PannelView> {
 
   XmagicProperty? _xmagicProperty;
   String? _titleKey;
-  bool isShowBackBtn = false;
+  bool _isShowBackBtn = false;
 
   //当前展示的列表
-  List<XmagicUIProperty>? currentList;
+  List<XmagicUIProperty>? _currentList;
+
+
+
+  static List<String> specialEffectKeys = [
+    /// 口红id
+    BeautyConstant.BEAUTY_MOUTH_LIPSTICK,
+    BeautyConstant.BEAUTY_MOUTH_LIPSTICK_IOS,
+
+    /// 腮红id
+    BeautyConstant.BEAUTY_FACE_RED_CHEEK,
+    BeautyConstant.BEAUTY_FACE_RED_CHEEK_IOS,
+
+    /// 立体 id
+    BeautyConstant.BEAUTY_FACE_SOFTLIGHT,
+    BeautyConstant.BEAUTY_FACE_SOFTLIGHT_IOS,
+
+    /// 自然 id
+    BeautyConstant.BEAUTY_FACE_NATURE,
+    BeautyConstant.BEAUTY_FACE_NATURE_IOS,
+
+    /// 女神 id
+    BeautyConstant.BEAUTY_FACE_GODNESS,
+    BeautyConstant.BEAUTY_FACE_GODNESS_IOS,
+
+    /// 英俊 id
+    BeautyConstant.BEAUTY_FACE_MALE_GOD,
+    BeautyConstant.BEAUTY_FACE_MALE_GOD_IOS,
+  ];
 
   @override
   initState() {
     super.initState();
-    _getAllData();
+    processData();
   }
 
   ///获取所有美颜属性
   ///get all data
-  void _getAllData() async {
-    _datas = await BeautyDataManager.getInstance().getAllPannelData(context);
+  void processData() async {
     List<String> types = [];
     for (var key in Category.orderKeys) {
-      if (_datas?[key]?.isNotEmpty ?? false) {
+      if (widget._beautyProperties?[key]?.isNotEmpty ?? false) {
         types.add(key);
       }
     }
-
     _titleKey = types[0];
-
-    List<XmagicUIProperty>? firstList = _datas?[_titleKey];
+    List<XmagicUIProperty>? firstList = widget._beautyProperties?[_titleKey];
     setState(() {
       _beautyTypes = types;
-      currentList = firstList;
+      _currentList = firstList;
     });
   }
 
@@ -74,19 +131,19 @@ class _PannelState extends State<PannelView> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          isShowBackBtn ? _buildBackLayout() : Container(),
+          _isShowBackBtn ? _buildBackLayout() : Container(),
           _buildSlider(),
           //标题
           _buildTitle(context),
           //内容
           SizedBox(
-            height: 100,
+            height: 120,
             child: ListView.builder(
                 controller: _scrollController,
                 shrinkWrap: true,
                 scrollDirection: Axis.horizontal,
                 itemBuilder: itemBuilder,
-                itemCount: currentList?.length),
+                itemCount: _currentList?.length),
           )
         ],
       ),
@@ -179,7 +236,7 @@ class _PannelState extends State<PannelView> {
               if (localValue != _currentProgress) {
                 _xmagicProperty?.effValue?.setCurrentDisplayValue(localValue);
                 if (widget.onSliderUpdateXmagicType == 1) {
-                  _onUpdataBeautyValue();
+                  _onUpdateBeautyValue();
                 }
               }
               setState(() {
@@ -188,7 +245,7 @@ class _PannelState extends State<PannelView> {
             },
             onChangeEnd: (value) {
               if (widget.onSliderUpdateXmagicType == 2) {
-                _onUpdataBeautyValue();
+                _onUpdateBeautyValue();
               }
             },
             min: _progressMin,
@@ -201,19 +258,37 @@ class _PannelState extends State<PannelView> {
   ///用于创建listview 的item中的image
   ///create listeView item :imageview
   Widget _getItemIcon(int index) {
-    if (currentList?[index]?.thumbDrawableName?.isNotEmpty ?? false) {
+    if (_currentList?[index].thumbDrawableName?.isNotEmpty ?? false) {
       String path =
-          "assets/images/icon/${currentList?[index].thumbDrawableName ?? "beauty_basic_face"}.png";
-      return Image.asset(
-        path,
+          "assets/images/icon/${_currentList?[index].thumbDrawableName ?? "beauty_basic_face"}.png";
+      return Container(
         width: 65,
         height: 65,
+        decoration: _currentList?[index].isChecked ?? false
+            ? BoxDecoration(
+                border: Border.all(width: 2, color: Colors.red.shade500),
+                borderRadius: BorderRadius.circular(10))
+            : null,
+        child: Image.asset(
+          path,
+          width: 65,
+          height: 65,
+        ),
       );
     } else {
-      return Image.file(
-        File(currentList?[index].thumbImagePath ?? ""),
+      return Container(
         width: 65,
         height: 65,
+        decoration: _currentList?[index].isChecked ?? false
+            ? BoxDecoration(
+                border: Border.all(width: 2, color: Colors.red.shade500),
+                borderRadius: BorderRadius.circular(10))
+            : null,
+        child: Image.file(
+          File(_currentList?[index].thumbImagePath ?? ""),
+          width: 65,
+          height: 65,
+        ),
       );
     }
   }
@@ -223,7 +298,7 @@ class _PannelState extends State<PannelView> {
   Widget itemBuilder(BuildContext context, int index) {
     return InkWell(
       onTap: () {
-        _onListItemClick(currentList?[index]);
+        _onListItemClick(index);
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -235,21 +310,54 @@ class _PannelState extends State<PannelView> {
           Container(
               margin: const EdgeInsets.fromLTRB(0, 5, 0, 5),
               child: Text(
-                currentList?[index].displayName ?? "",
+                _currentList?[index].displayName ?? "",
                 style: const TextStyle(color: Colors.white, fontSize: 14),
                 textAlign: TextAlign.center,
-              ))
+              )),
+          Container(
+            width: 5,
+            height: 5,
+            decoration: BoxDecoration(
+                color: _isShowPoint(_currentList?[index])
+                    ? Colors.red
+                    : Colors.transparent,
+                borderRadius: const BorderRadius.all(Radius.circular(3))),
+          ),
         ],
       ),
     );
   }
 
+  bool _isShowPoint(XmagicUIProperty? uiProperty) {
+    if (uiProperty == null) {
+      return false;
+    }
+    if (uiProperty.uiCategory != Category.BEAUTY) {
+      return false;
+    }
+    if (uiProperty.xmagicUIPropertyList != null) {
+      for (XmagicUIProperty xmagicUIProperty
+          in uiProperty.xmagicUIPropertyList!) {
+        bool isShow = _isShowPoint(xmagicUIProperty);
+        if (isShow) {
+          return true;
+        }
+      }
+    } else {
+      XmagicPropertyValues? propertyValues = uiProperty.property?.effValue;
+      if (propertyValues?.getCurrentDisplayValue() != 0 && uiProperty.isUsed) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   ///返回按钮点击事件
   void _onBackBtnClick() {
-    List<XmagicUIProperty>? list = _datas?[_titleKey];
+    List<XmagicUIProperty>? list = widget._beautyProperties?[_titleKey];
     setState(() {
-      currentList = list;
-      isShowBackBtn = false;
+      _currentList = list;
+      _isShowBackBtn = false;
     });
     _scrollController.jumpTo(_listViewOffect);
   }
@@ -259,22 +367,26 @@ class _PannelState extends State<PannelView> {
     setState(() {
       _titleKey = titleName;
     });
-    List<XmagicUIProperty>? list = _datas?[titleName];
+    List<XmagicUIProperty>? list = widget._beautyProperties?[titleName];
     setState(() {
-      isShowBackBtn = false;
-      currentList = list;
+      _isShowBackBtn = false;
+      _currentList = list;
     });
   }
 
   /// 美颜属性的点击事件
   /// item click
-  void _onListItemClick(XmagicUIProperty? xmagicUIProperty) {
-    if (xmagicUIProperty?.xmagicUIPropertyList?.isNotEmpty ?? false) {
+  void _onListItemClick(int index) {
+    XmagicUIProperty xmagicUIProperty = _currentList![index];
+    _updateIsUsed(index);
+    _upDateCheckedItem(_currentList!);
+    xmagicUIProperty.isChecked = true;
+    if (xmagicUIProperty.xmagicUIPropertyList?.isNotEmpty ?? false) {
       _xmagicProperty = null;
       setState(() {
         _isShowSeekBar = false;
-        currentList = xmagicUIProperty?.xmagicUIPropertyList;
-        isShowBackBtn = true;
+        _currentList = xmagicUIProperty?.xmagicUIPropertyList;
+        _isShowBackBtn = true;
         _secondTitleName = xmagicUIProperty?.displayName ?? "";
       });
       _listViewOffect = _scrollController.offset;
@@ -299,12 +411,36 @@ class _PannelState extends State<PannelView> {
         _progressMin = localMin;
       }
     });
-    _onUpdataBeautyValue();
+    _onUpdateBeautyValue();
+  }
+
+  _updateIsUsed(int index) {
+    XmagicUIProperty uiProperty = _currentList![index];
+    if (uiProperty.property?.effKey?.isNotEmpty ?? false) {
+      if (specialEffectKeys.contains(uiProperty.property?.effKey)) {
+        for (XmagicUIProperty uiProperty in _currentList!) {
+          uiProperty.isUsed = false;
+        }
+      }
+    }
+    uiProperty.isUsed = true;
+  }
+
+  _upDateCheckedItem(List<XmagicUIProperty> uiPropertyList) {
+    for (XmagicUIProperty uiProperty in uiPropertyList) {
+      uiProperty.isChecked = false;
+      if (uiProperty.xmagicUIPropertyList != null) {
+        _upDateCheckedItem(uiProperty.xmagicUIPropertyList!);
+      }
+      if (uiProperty.property != null) {
+        uiProperty.isChecked = false;
+      }
+    }
   }
 
   /// 更新美颜属性值
   /// update beauty item
-  Future<void> _onUpdataBeautyValue() async {
+  Future<void> _onUpdateBeautyValue() async {
     if (_xmagicProperty != null) {
       if (_xmagicProperty?.id == "video_empty_segmentation") {
         Map<Permission, PermissionStatus> statuses = await [
@@ -322,7 +458,9 @@ class _PannelState extends State<PannelView> {
         }
       }
       TencentEffectApi.getApi()?.updateProperty(_xmagicProperty!);
-      widget._itemClickCallBack?.call();
+      widget._itemClickCallBack?.call(_xmagicProperty!);
     }
   }
+
+
 }
