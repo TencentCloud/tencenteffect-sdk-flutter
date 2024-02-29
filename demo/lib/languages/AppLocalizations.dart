@@ -14,7 +14,6 @@ class AppLocalizations {
     AppLocalizations? appLocalizations =
         Localizations.of<AppLocalizations>(context, AppLocalizations);
 
-    print("kevinxlhua${appLocalizations == null}");
     return appLocalizations;
   }
 
@@ -255,5 +254,14 @@ class AppLocalizations {
       _localizedStrings[locale.languageCode]!["demo_live_label4"];
   String? get getDemoLiveLabel5 =>
       _localizedStrings[locale.languageCode]!["demo_live_label5"];
+
+
+
+  String? get getPanelSliderTypeMakeup =>
+      _localizedStrings[locale.languageCode]!["panel_slider_type_makeup"];
+
+  String? get getPanelSliderTypeLut =>
+      _localizedStrings[locale.languageCode]!["panel_slider_type_lut"];
+
 
 }

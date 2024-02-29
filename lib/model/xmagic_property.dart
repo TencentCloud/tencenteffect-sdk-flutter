@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:tencent_effect_flutter/utils/Logs.dart';
 import 'package:tencent_effect_flutter/utils/xmagic_decode_utils.dart';
 
+@deprecated
 class XmagicProperty {
   static final String ID_NONE = "ID_NONE";
   String? category;

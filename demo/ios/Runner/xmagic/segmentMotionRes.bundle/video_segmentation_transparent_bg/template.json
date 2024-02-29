@@ -1,5 +1,6 @@
 {
-   "componentLevel": 280,
+   "isFragment": false,
+   "componentLevel": 350,
    "madeIn": "LightStudio",
    "root": {
       "id": 16,
@@ -63,7 +64,7 @@
                   "enabled": true,
                   "entityId": 33,
                   "componentID": 33001,
-                  "level": 1
+                  "level": 350
                },
                {
                   "beautyStatus": 1,
@@ -80,6 +81,7 @@
                   "type": "EntityIdentifier",
                   "name": "非美型占位节点",
                   "id": 33,
+                  "originID": 33,
                   "enabled": true
                }
             ]
@@ -143,7 +145,7 @@
                         "enabled": true,
                         "entityId": 18,
                         "componentID": 18001,
-                        "level": 1
+                        "level": 350
                      },
                      {
                         "aiType": "BG_SEG_AGENT",
@@ -161,6 +163,7 @@
                         "type": "EntityIdentifier",
                         "name": "AITexture",
                         "id": 18,
+                        "originID": 18,
                         "enabled": true
                      }
                   ]
@@ -220,7 +223,7 @@
                         "enabled": true,
                         "entityId": 19,
                         "componentID": 19001,
-                        "level": 1
+                        "level": 350
                      },
                      {
                         "bgAlpha": 0,
@@ -252,6 +255,7 @@
                         "type": "EntityIdentifier",
                         "name": "分割",
                         "id": 19,
+                        "originID": 19,
                         "enabled": true
                      }
                   ]
@@ -264,54 +268,50 @@
                   "version": 0,
                   "components": [
                      {
-                        "type": "ScreenTransform",
-                        "position": {
-                           "x": 0,
-                           "y": 0,
-                           "z": 0
-                        },
-                        "rotation": {
-                           "x": 0,
-                           "y": 0,
-                           "z": 0,
-                           "w": 1
-                        },
-                        "scale": {
-                           "x": 1,
-                           "y": 1,
-                           "z": 1,
-                           "eKeepRatio": true
-                        },
-                        "eEuler": {
-                           "x": 0,
-                           "y": 0,
-                           "z": 0
-                        },
                         "anchor": {
-                           "left": 0,
-                           "right": 0,
-                           "top": 0,
-                           "bottom": 0
+                           "bottom": -1,
+                           "left": -1,
+                           "right": 1,
+                           "top": 1
                         },
                         "offset": {
-                           "left": -360,
-                           "right": 360,
-                           "top": 640,
-                           "bottom": -640
+                           "bottom": 0,
+                           "left": 0,
+                           "right": 0,
+                           "top": 0
                         },
                         "pivot": {
                            "x": 0,
                            "y": 0
                         },
-                        "ePinToEdge": 0,
-                        "eFixSize": 3,
-                        "eEditingMode": 0,
+                        "ePinToEdge": 15,
+                        "eFixSize": 0,
+                        "eEditingMode": 1,
                         "eKeepRatio": true,
+                        "position": {
+                           "x": 0,
+                           "y": 0,
+                           "z": 0
+                        },
+                        "scale": {
+                           "eKeepRatio": true,
+                           "x": 1,
+                           "y": 1,
+                           "z": 1
+                        },
+                        "rotation": {
+                           "w": 1,
+                           "x": 0,
+                           "y": 0,
+                           "z": 0
+                        },
                         "objectEnabled": true,
-                        "enabled": true,
                         "entityId": 20,
                         "componentID": 20001,
-                        "level": 1
+                        "type": "ScreenTransform",
+                        "enabled": true,
+                        "version": 2,
+                        "level": 350
                      },
                      {
                         "componentID": 20002,
@@ -321,7 +321,7 @@
                         "scaleMode": 2,
                         "src": "RenderTarget2",
                         "type": "Image",
-                        "version": 2
+                        "version": 14
                      },
                      {
                         "alpha": 1,
@@ -348,6 +348,7 @@
                         "type": "EntityIdentifier",
                         "name": "前景贴纸",
                         "id": 20,
+                        "originID": 20,
                         "enabled": true
                      }
                   ]
@@ -409,7 +410,7 @@
                         "enabled": true,
                         "entityId": 40,
                         "componentID": 40001,
-                        "level": 1
+                        "level": 350
                      },
                      {
                         "componentID": 40002,
@@ -424,6 +425,7 @@
                         "type": "EntityIdentifier",
                         "name": "美型占位节点",
                         "id": 40,
+                        "originID": 40,
                         "enabled": true
                      }
                   ]
@@ -475,7 +477,7 @@
                   "enabled": true,
                   "version": 2,
                   "objectEnabled": true,
-                  "level": 1
+                  "level": 350
                },
                {
                   "componentID": 17002,
@@ -490,6 +492,7 @@
                   "type": "EntityIdentifier",
                   "name": "2D画板",
                   "id": 17,
+                  "originID": 17,
                   "enabled": true
                }
             ]
@@ -539,7 +542,7 @@
             "type": "ScreenTransform",
             "enabled": true,
             "version": 10,
-            "level": 1
+            "level": 350
          },
          {
             "defaultCameraPosition": 0,
@@ -562,6 +565,7 @@
             "type": "EntityIdentifier",
             "name": "拍摄模板",
             "id": 16,
+            "originID": 16,
             "enabled": true
          }
       ],
@@ -574,6 +578,7 @@
          "commandMap": {},
          "inputColor": "#ffffffff",
          "sizeType": 0,
+         "useForDisplay": false,
          "compatibilityMode": true,
          "depthType": "DEPTH24",
          "textureOptions": {
@@ -607,6 +612,7 @@
          "commandMap": {},
          "inputColor": "#ffffffff",
          "sizeType": 0,
+         "useForDisplay": false,
          "compatibilityMode": true,
          "depthType": "DEPTH24",
          "textureOptions": {
@@ -633,6 +639,7 @@
          "commandMap": {},
          "inputColor": "#ffffffff",
          "sizeType": 0,
+         "useForDisplay": false,
          "compatibilityMode": true,
          "depthType": "DEPTH24",
          "textureOptions": {
@@ -662,12 +669,12 @@
          "path": "./",
          "level": 2
       },
-      "799ced2c-7d40-4921-a010-6d7d680f423e": {
-         "type": "folder",
+      "eb93467d-2baa-46fc-9f2e-f351e9376d15": {
+         "type": "default",
          "commandMap": {},
-         "key": "799ced2c-7d40-4921-a010-6d7d680f423e",
-         "label": "AI",
-         "path": "AI",
+         "key": "eb93467d-2baa-46fc-9f2e-f351e9376d15",
+         "label": "video_segmentation_transparent_bg.2023-04-26-08-02-41-884Z.bak",
+         "path": "video_segmentation_transparent_bg.2023-04-26-08-02-41-884Z.bak",
          "level": 2
       }
    },
@@ -687,6 +694,7 @@
          "minImageDuration": 1000000,
          "maxImageDuration": 10000000,
          "minVideoDuration": 2000000,
+         "minFreezePointInterval": 0,
          "preferredCoverTime": 1000000,
          "originVolume": 1,
          "cropEvents": [
@@ -694,7 +702,9 @@
          ],
          "imageCropSpace": 0,
          "videoCropSpace": -1,
-         "disableEventsWhileTransition": true
+         "disableEventsWhileTransition": true,
+         "useInternalRhythm": true,
+         "headProtectDuration": 0
       },
       "materialConfigs": [],
       "resourceIDs": []

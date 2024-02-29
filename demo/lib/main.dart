@@ -1,25 +1,22 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:tencent_effect_flutter/api/android/tencent_effect_api_android.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tencent_effect_flutter/api/tencent_effect_api.dart';
 import 'package:tencent_effect_flutter/utils/Logs.dart';
 import 'package:tencent_effect_flutter_demo/languages/app_localization_delegate.dart';
-import 'package:tencent_effect_flutter_demo/page/superplayer_page.dart';
-import 'package:tencent_effect_flutter_demo/page/trtc_camera_preview_page.dart';
-import 'package:tencent_effect_flutter_demo/producer/beauty_property_producer_android.dart';
+import 'package:tencent_effect_flutter_demo/manager/res_path_manager.dart';
+import 'package:tencent_effect_flutter_demo/page/live_page.dart';
+import 'package:tencent_effect_flutter_demo/page/trtc_page.dart';
 import 'package:tencent_effect_flutter_demo/view/progress_dialog.dart';
-import 'producer/beauty_data_manager.dart';
-import 'page/live_camera_preview_page.dart';
+import 'config/te_res_config.dart';
 
 //授权使用的license 信息
 const String licenseUrl =
-    "请替换成您的license url";
-const String licenseKey = "请替换为您的license key";
+    "Please replace it with your license URL.";
+const String licenseKey = "Please replace it with your license key";
 
 void main() {
   runApp(const MyApp());
@@ -44,11 +41,8 @@ class MyApp extends StatelessWidget {
         initialRoute: "/",
         routes: <String, WidgetBuilder>{
           '/homepage': (BuildContext context) => const HomePage(),
-          '/cameraBeautyPage_Live': (BuildContext context) =>
-              const LiveCameraPushPage(),
-          '/cameraBeautyPage_Trtc': (BuildContext context) =>
-              const TrtcCameraPreviewPage(),
-          '/playerpage': (BuildContext context) => const PlayerPage(),
+          '/page_Live': (BuildContext context) => const LivePage(),
+          '/page_TRTC': (BuildContext context) => const TRTCPage(),
         },
         home: const HomePage());
   }
@@ -62,11 +56,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomeState extends State<HomePage> {
-
   static const String TAG = "_HomeState";
+
   @override
   void initState() {
     super.initState();
+    initPanelViewConfig();
   }
 
   @override
@@ -80,23 +75,23 @@ class _HomeState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           TextButton(
-              onPressed: () => {_onCameraPressedLive(context)},
+              onPressed: () => {_onClickLive(context)},
               child: const Text('Live',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                   ))),
           TextButton(
-              onPressed: () => {_onCameraPressedTrtc(context)},
-              child: const Text('Trtc',
+              onPressed: () => {_onClickTRTC(context)},
+              child: const Text('TRTC',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                   ))),
-          TextButton(
-              onPressed: () => {_onPlayerPressed(context)},
-              child: const Text('Player',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ))),
+          // TextButton(
+          //     onPressed: () => {_onClickPlayer(context)},
+          //     child: const Text('Player',
+          //         style: TextStyle(
+          //           fontWeight: FontWeight.bold,
+          //         ))),
           // TextButton(
           //     onPressed: () => {_onTestPressed(context)},
           //     child: const Text('Test',
@@ -108,63 +103,67 @@ class _HomeState extends State<HomePage> {
     );
   }
 
-  bool _isInitResource = false;
-
-  void _initResource(InitXmagicCallBack callBack) async {
-    if (_isInitResource) {
+  void _initSettings(InitXmagicCallBack callBack) async {
+    _setResourcePath();
+    /// 复制资源只需要复制一次，在当前版本中如果成功复制了一次，以后就不需要再复制资源。
+    /// Copying the resource only needs to be done once. Once it has been successfully copied in the current version, there is no need to copy it again in future versions.
+    if (await isCopiedRes()) {
       callBack.call(true);
       return;
+    } else {
+      _copyRes(callBack);
     }
+  }
 
-    String dir = await BeautyDataManager.getInstance().getResDir();
-    TXLog.printlog('$TAG method is _initResource ,xmagic resource dir is $dir');
-    TencentEffectApi.getApi()?.initXmagic(dir, (reslut) {
-      _isInitResource = reslut;
-      callBack.call(reslut);
-      if (!reslut) {
+  void _setResourcePath() async {
+    String resourceDir = await ResPathManager.getResManager().getResPath();
+    TXLog.printlog(
+        '$TAG method is _initResource ,xmagic resource dir is $resourceDir');
+    TencentEffectApi.getApi()?.setResourcePath(resourceDir);
+  }
+
+  void _copyRes(InitXmagicCallBack callBack) {
+    _showDialog(context);
+    TencentEffectApi.getApi()?.initXmagic((result) {
+      if (result) {
+        saveResCopied();
+      }
+      _dismissDialog(context);
+      callBack.call(result);
+      if (!result) {
         Fluttertoast.showToast(msg: "initialization failed");
       }
     });
   }
 
-  void _onCameraPressedLive(BuildContext context) {
-    _showDialog(context);
-    _initResource((reslut) {
-      if (reslut) {
+  void _onClickLive(BuildContext context) {
+    _initSettings((result) {
+      if (result) {
         TencentEffectApi.getApi()?.setLicense(licenseKey, licenseUrl,
             (errorCode, msg) {
-          _dismissDialog(context);
-          TXLog.printlog('$TAG  setLicense result : errorCode =$errorCode ,msg = $msg');
+          TXLog.printlog(
+              '$TAG  setLicense result : errorCode =$errorCode ,msg = $msg');
           if (errorCode == 0) {
-            _requestPermission(context, 0);
+            _requestPermission(context, "/page_Live");
           }
         });
-      } else {
-        _dismissDialog(context);
       }
     });
   }
 
-  ///跳转到播放器
-  ///action player page
-  void _onPlayerPressed(BuildContext context) {
-    Navigator.of(context).pushNamed("/playerpage");
-  }
 
-  void _onCameraPressedTrtc(BuildContext context) {
-    _showDialog(context);
-    _initResource((reslut) {
-      if (reslut) {
+
+  void _onClickTRTC(BuildContext context) {
+    _initSettings((result) {
+      if (result) {
         TencentEffectApi.getApi()?.setLicense(licenseKey, licenseUrl,
             (errorCode, msg) {
-          _dismissDialog(context);
-          TXLog.printlog('$TAG  setLicense result : errorCode =$errorCode ,msg = $msg');
+          TXLog.printlog(
+              '$TAG  setLicense result : errorCode =$errorCode ,msg = $msg');
           if (errorCode == 0) {
-            _requestPermission(context, 1);
+            _requestPermission(context, "/page_TRTC");
           }
         });
-      } else {
-        _dismissDialog(context);
       }
     });
   }
@@ -183,7 +182,7 @@ class _HomeState extends State<HomePage> {
     Navigator.of(context).pop(true);
   }
 
-  void _requestPermission(BuildContext context, int pageType) async {
+  void _requestPermission(BuildContext context, String pageName) async {
     ///开始申请权限
     ///request permission
     Map<Permission, PermissionStatus> statuses = await [
@@ -192,14 +191,39 @@ class _HomeState extends State<HomePage> {
     ].request();
     if (statuses[Permission.camera] != PermissionStatus.denied &&
         statuses[Permission.microphone] != PermissionStatus.denied) {
-      if (pageType == 0) {
-        Navigator.of(context).pushNamed("/cameraBeautyPage_Live");
-      } else if (pageType == 1) {
-        Navigator.of(context).pushNamed("/cameraBeautyPage_Trtc");
-      }
+      Navigator.of(context).pushNamed(pageName);
     }
   }
 
+  void initPanelViewConfig() {
+    ///设置面板JSON 数据
+    TEResConfig.getConfig()
+      ..setBeautyRes("assets/beauty_panel/beauty.json")
+      ..setBeautyBodyRes("assets/beauty_panel/beauty_body.json")
+      ..setLutRes("assets/beauty_panel/lut.json")
+      ..setMakeUpRes("assets/beauty_panel/makeup.json")
+      ..setMotionRes("assets/beauty_panel/motions.json")
+      ..setSegmentationRes("assets/beauty_panel/segmentation.json");
+  }
+
+  Future<bool> isCopiedRes() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    String currentAppVersionName = packageInfo.version;
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    String? versionName = sharedPreferences.getString("app_version_name");
+    TXLog.printlog(
+        '$TAG method is isCopiedRes ,currentAppVersionName= $currentAppVersionName   versionName ${versionName}');
+    return currentAppVersionName == versionName;
+  }
+
+  void saveResCopied() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    String currentAppVersionName = packageInfo.version;
+    await sharedPreferences.setString(
+        "app_version_name", currentAppVersionName);
+  }
 
   ///用于响应测试按钮的点击事件
   _onTestPressed(BuildContext context) async {
@@ -223,12 +247,10 @@ class _HomeState extends State<HomePage> {
     //   });
     // });
 
-
     ///用于测试动态加载so的方法（仅Android）
     // String resPath = await BeautyPropertyProducerAndroid().getResPath();
     // TencentEffectApiAndroid apiAndroid = TencentEffectApiAndroid();
     // bool result =await apiAndroid.setLibPathAndLoad("$resPath${Platform.pathSeparator}templib");
     // TXLog.printlog("$TAG setLibPathAndLoad $result ");
-
   }
 }

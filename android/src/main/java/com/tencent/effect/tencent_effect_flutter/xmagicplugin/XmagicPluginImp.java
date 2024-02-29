@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.tencent.effect.tencent_effect_flutter.utils.LogUtils;
+import com.tencent.effect.tencent_effect_flutter.res.XmagicResParser;
 import com.tencent.xmagic.XmagicProperty;
 
 import java.lang.reflect.Type;
@@ -102,6 +103,20 @@ public class XmagicPluginImp implements XmagicPlugin {
         this.mEventSink = eventSink;
     }
 
+    @Override
+    public void setResourcePath(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        LogUtils.d(TAG, "start setResourcePath resource ");
+        if (call.arguments instanceof Map) {
+            Map<String, String> map = (Map<String, String>) call.arguments;
+            String resPathDir = map.get("pathDir");
+            LogUtils.d(TAG, "method setResourcePath resPathDir = " + resPathDir);
+            XmagicResParser.setResPath(resPathDir);
+            result.success(null);
+            return;
+        }
+        resultParameterError(call.method, result);
+    }
+
     /**
      * 初始化资源文件，用于将美颜的资源从assets中复制到到安装目录下
      * Initialize the resource file for copying beauty resources from assets to the installation directory
@@ -112,37 +127,30 @@ public class XmagicPluginImp implements XmagicPlugin {
     @Override
     public void initXmagic(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         LogUtils.d(TAG, "start init xmagic resource ");
-        if (call.arguments instanceof Map) {
-            Map<String, String> map = (Map<String, String>) call.arguments;
-            String resPathDir = map.get("pathDir");
-            LogUtils.d(TAG, "method initXmagic resPathDir = " + resPathDir);
-            XmagicApiManager.getInstance().initModelResource(applicationContext,resPathDir, isCopySuccess -> {
-                handler.post(() -> sendBoolData("initXmagic", isCopySuccess));
-            });
-            result.success(null);
-            return;
-        }
-        resultParameterError(call.method, result);
+        XmagicApiManager.getInstance().initModelResource(applicationContext, isCopySuccess -> {
+            handler.post(() -> sendBoolData("initXmagic", isCopySuccess));
+        });
+        result.success(null);
     }
 
     @Override
     public void addAiMode(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         if (call.arguments instanceof Map) {
-            Map<String,String> map = (Map<String, String>)call.arguments;
+            Map<String, String> map = (Map<String, String>) call.arguments;
             String inputDir = map.get("input");
             String resDir = map.get("res");
-            LogUtils.d(TAG, "addAiMode method parameter is: inputDir " + inputDir +"  resDir "+resDir);
+            LogUtils.d(TAG, "addAiMode method parameter is: inputDir " + inputDir + "  resDir " + resDir);
             if (!TextUtils.isEmpty(inputDir) && !TextUtils.isEmpty(resDir)) {
                 new Thread(() -> {
-                    int addResult = XmagicApiManager.addAiModeFiles(inputDir,resDir);
+                    int addResult = XmagicApiManager.addAiModeFiles(inputDir, resDir);
                     LogUtils.d(TAG, "addAiMode method result is " + addResult);
-                    Map<String,Object> resultMap = new ArrayMap<>();
-                    resultMap.put("input",inputDir);
-                    resultMap.put("code",addResult);
+                    Map<String, Object> resultMap = new ArrayMap<>();
+                    resultMap.put("input", inputDir);
+                    resultMap.put("code", addResult);
                     handler.post(() -> sendMapData("addAiMode", resultMap));
                 }).start();
                 result.success(null);
-                return ;
+                return;
             }
         }
         resultParameterError(call.method, result);
@@ -156,7 +164,7 @@ public class XmagicPluginImp implements XmagicPlugin {
             if (!TextUtils.isEmpty(path)) {
                 boolean loadResult = XmagicApiManager.setLibPathAndLoad(path);
                 result.success(loadResult);
-                return ;
+                return;
             }
         }
         resultParameterError(call.method, result);
@@ -164,7 +172,8 @@ public class XmagicPluginImp implements XmagicPlugin {
 
     /**
      * 进行美颜授权处理
-     *Perform beauty authorization processing
+     * Perform beauty authorization processing
+     *
      * @param call
      * @param result
      */
@@ -216,9 +225,6 @@ public class XmagicPluginImp implements XmagicPlugin {
     }
 
 
-
-
-
     /**
      * 恢复美颜效果
      *
@@ -244,15 +250,13 @@ public class XmagicPluginImp implements XmagicPlugin {
     }
 
 
-
-
-
     /**
      * 设置美颜属性
      *
      * @param call
      * @param result
      */
+    @Deprecated
     @Override
     public void updateProperty(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         if (call.arguments instanceof String) {
@@ -271,6 +275,43 @@ public class XmagicPluginImp implements XmagicPlugin {
         }
         resultParameterError(call.method, result);
     }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void setEffect(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        if (call.arguments instanceof Map) {
+            Map<String, Object> param = (Map<String, Object>) call.arguments;
+            String effectName = null;
+            int effectValue = 0;
+            String resourcePath = null;
+            Map<String, String> extraInfo = null;
+            try {
+                if (param.get("effectName") instanceof String) {
+                    effectName = (String) param.get("effectName");
+                }
+                Object tempEffectValue = param.get("effectValue");
+                if (tempEffectValue instanceof Integer) {
+                    effectValue = (int) tempEffectValue;
+                }
+                if (param.get("resourcePath") instanceof String) {
+                    resourcePath = (String) param.get("resourcePath");
+                }
+                Object tempExtraInfo = param.get("extraInfo");
+                if (tempExtraInfo instanceof Map) {
+                    extraInfo = (Map<String, String>) tempExtraInfo;
+                }
+                if (!TextUtils.isEmpty(effectName)) {
+                    XmagicApiManager.getInstance().setEffect(effectName, effectValue, resourcePath, extraInfo);
+                    result.success(null);
+                    return;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        resultParameterError(call.method, result);
+    }
+
 
     /**
      * 用于校验属性是否授权
@@ -334,10 +375,10 @@ public class XmagicPluginImp implements XmagicPlugin {
                     .getPropertyRequiredAbilities(data);
 //            Type type2 = new TypeToken<Map<XmagicProperty<?>, ArrayList<String>>>() {
 //            }.getType();
-            Map<String,ArrayList<String>> resultMap = new ArrayMap<>();
+            Map<String, ArrayList<String>> resultMap = new ArrayMap<>();
 
-            for (XmagicProperty<?> key: resultData.keySet()) {
-                 resultMap.put(gson.toJson(key),resultData.get(key));
+            for (XmagicProperty<?> key : resultData.keySet()) {
+                resultMap.put(gson.toJson(key), resultData.get(key));
             }
 
             result.success(gson.toJson(resultMap));
@@ -369,14 +410,27 @@ public class XmagicPluginImp implements XmagicPlugin {
     }
 
     @Override
-    public void enableEnhancedMode(@NonNull MethodCall call, @NonNull MethodChannel.Result result){
+    public void isDeviceSupportMotion(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
+        if (call.arguments instanceof Map) {
+            Map<String, String> map = (Map<String, String>) call.arguments;
+            String resPathDir = map.get("motionResPath");
+            LogUtils.d(TAG, "method isDeviceSupportMotion resPathDir = " + resPathDir);
+            boolean isSupport = XmagicApiManager.getInstance().isDeviceSupport(resPathDir);
+            result.success(isSupport);
+            return;
+        }
+        resultParameterError(call.method, result);
+    }
+
+    @Override
+    public void enableEnhancedMode(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         XmagicApiManager.getInstance().enableEnhancedMode();
         result.success(true);
     }
 
 
     @Override
-    public void setDowngradePerformance(@NonNull MethodCall call, @NonNull MethodChannel.Result result){
+    public void setDowngradePerformance(@NonNull MethodCall call, @NonNull MethodChannel.Result result) {
         XmagicApiManager.getInstance().setDowngradePerformance();
         result.success(true);
     }
@@ -388,7 +442,7 @@ public class XmagicPluginImp implements XmagicPlugin {
             boolean isMute = (boolean) call.arguments;
             XmagicApiManager.getInstance().setAudioMute(isMute);
             result.success(true);
-        }else {
+        } else {
             resultParameterError(call.method, result);
         }
     }
@@ -447,7 +501,7 @@ public class XmagicPluginImp implements XmagicPlugin {
             boolean isMute = (boolean) call.arguments;
             XmagicApiManager.getInstance().enableAIDataListener(isMute);
             result.success(true);
-        }else {
+        } else {
             resultParameterError(call.method, result);
         }
     }
@@ -458,7 +512,7 @@ public class XmagicPluginImp implements XmagicPlugin {
             boolean isMute = (boolean) call.arguments;
             XmagicApiManager.getInstance().enableYTDataListener(isMute);
             result.success(true);
-        }else {
+        } else {
             resultParameterError(call.method, result);
         }
     }
@@ -469,7 +523,7 @@ public class XmagicPluginImp implements XmagicPlugin {
             boolean isMute = (boolean) call.arguments;
             XmagicApiManager.getInstance().enableTipsListener(isMute);
             result.success(true);
-        }else {
+        } else {
             resultParameterError(call.method, result);
         }
     }

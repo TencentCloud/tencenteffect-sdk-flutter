@@ -51,7 +51,7 @@ static TencentEffectFlutterPlugin* _instance = nil;
     result([@"iOS " stringByAppendingString:[[UIDevice currentDevice] systemVersion]]);
   }else if ([@"initXmagic" isEqualToString:call.method]) {
       result(nil);
-      [self initXmagic:call.arguments];
+      [self initXmagic];
       [self setDataCallBack];
   }else if ([@"isSupportBeauty" isEqualToString:call.method]) {
       result(@true);
@@ -98,6 +98,12 @@ static TencentEffectFlutterPlugin* _instance = nil;
   }else if ([@"setImageOrientation" isEqualToString:call.method]) {
       [[XmagicApiManager shareSingleton] setImageOrientation:[call.arguments intValue]];
       result(nil);
+  }else if ([@"isDeviceSupportMotion" isEqualToString:call.method]) {
+      result(@true);
+  }else if ([@"setResourcePath" isEqualToString:call.method]) {
+      [[XmagicApiManager shareSingleton] setResourcePath:call.arguments[@"pathDir"]];
+  }else if ([@"setEffect" isEqualToString:call.method]) {
+      [[XmagicApiManager shareSingleton] setEffect:call.arguments];
   }else {
     result(FlutterMethodNotImplemented);
   }
@@ -118,8 +124,8 @@ static TencentEffectFlutterPlugin* _instance = nil;
     }];
 }
 
--(void)initXmagic:(NSString *)resPath{
-    [[XmagicApiManager shareSingleton] initXmagicRes:resPath complete:^(bool success) {
+-(void)initXmagic{
+    [[XmagicApiManager shareSingleton] initXmagicRes:^(bool success) {
         NSDictionary *result;
         if (success) {
             result = @{@"methodName":@"initXmagic", @"data":@true};
@@ -184,26 +190,12 @@ static TencentEffectFlutterPlugin* _instance = nil;
     return  dict;
 }
 
-- (NSString *)mapToString:(id)dict {
-    if (dict != nil && ([dict isKindOfClass:[NSDictionary class]] || [dict isKindOfClass:[NSArray class]])) {
-        if (![NSJSONSerialization isValidJSONObject:dict]) {
-            NSLog(@"Invalid JSON object");
-            return @"";
-        }
-        
+-(NSString *)mapToString:(id)dict{
+    if(dict != nil && ([dict isKindOfClass:[NSDictionary class]] || [dict isKindOfClass:[NSArray class]])){
         NSError *error;
-        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dict options:NSJSONWritingFragmentsAllowed error:&error];
-        if (error != nil) {
-            NSLog(@"mapToString error: %@", error.description);
-            return @"";
-        }
-        
-        if (jsonData != nil) {
-            NSString *string = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-            if (string != nil) {
-                return string;
-            }
-        }
+        NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dict options:NSJSONWritingPrettyPrinted error:&error];
+        NSString *string = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+        return  string == nil ? @"" : string;
     }
     return @"";
 }

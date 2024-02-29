@@ -19,6 +19,7 @@ public interface XmagicPlugin {
 
     void setEventSink(EventChannel.EventSink eventSink);
 
+    void setResourcePath(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
 
     void initXmagic(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
 
@@ -35,7 +36,10 @@ public interface XmagicPlugin {
 
     void onPause(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
 
+    @Deprecated
     void updateProperty(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
+
+    void setEffect(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
 
     void isBeautyAuthorized(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
 
@@ -46,7 +50,7 @@ public interface XmagicPlugin {
     void getPropertyRequiredAbilities(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
 
     void isDeviceSupport(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
-
+    void isDeviceSupportMotion(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
     void enableEnhancedMode(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
 
     void setDowngradePerformance(@NonNull MethodCall call, @NonNull MethodChannel.Result result);
