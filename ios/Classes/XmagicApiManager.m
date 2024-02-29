@@ -36,6 +36,8 @@ static const int MAX_SEG_VIDEO_DURATION = 200 * 1000;//视频长度限制
 @property (nonatomic, strong) NSArray *resNames;  //resource name
 @property (nonatomic, strong) NSLock  *lock;
 @property (nonatomic, assign) BOOL highPerfoemance;
+@property (nonatomic, strong) NSMutableArray<NSDictionary *>*saveEffectList;
+@property (nonatomic, assign) BOOL xmagicInit;
 
 @end
 
@@ -59,30 +61,65 @@ static XmagicApiManager *shareSingleton = nil;
     return [XmagicApiManager shareSingleton];
 }
 
+- (void)setResourcePath:(NSString *)pathDir{
+    self.xmagicResPath = pathDir;
+}
+
 //init resource
 //初始化美颜资源
--(void)initXmagicRes:(NSString *)resPath complete:(initXmagicResCallback)complete{
-    [self initResName];
-    if ([[NSFileManager  defaultManager] fileExistsAtPath:resPath]){
-        [[NSFileManager defaultManager] removeItemAtPath:resPath error:nil];
+-(void)initXmagicRes:(initXmagicResCallback)complete{
+    if(self.xmagicResPath.length == 0){
+        NSLog(@"error:resPath is invalid");
+        return;
     }
-    [[NSFileManager  defaultManager] createDirectoryAtPath:resPath withIntermediateDirectories:YES attributes:nil error:NULL];
+    [self initResName];
+    if (![[NSFileManager  defaultManager] fileExistsAtPath:self.xmagicResPath]){
+        [[NSFileManager  defaultManager] createDirectoryAtPath:self.xmagicResPath withIntermediateDirectories:YES attributes:nil error:NULL];
+    }
     NSError *error = nil;
     for (int i = 0; i < _resNames.count; i++) {
         NSString *bundlePath = [[NSBundle mainBundle] pathForResource:_resNames[i] ofType:@"bundle"];
         if (bundlePath !=nil) {
-            NSString *path = [NSString stringWithFormat:@"%@/%@.bundle",resPath,_resNames[i]];
-            [[NSFileManager defaultManager] copyItemAtPath:bundlePath toPath:path error:&error];
-            if (error != nil) {
-                NSLog(@"xmagic init resource error：%@",error.description);
-                break;
+            NSString *path = [NSString stringWithFormat:@"%@/%@.bundle",self.xmagicResPath,_resNames[i]];
+            if(![[NSFileManager  defaultManager] fileExistsAtPath:path]){
+                [[NSFileManager defaultManager] copyItemAtPath:bundlePath toPath:path error:&error];
+                if (error != nil) {
+                    NSLog(@"xmagic init resource error：%@",error.description);
+                    break;
+                }
+            }else{
+                [self copyItemsFromBundleToSandbox:bundlePath sandboxFolderPath:path];
             }
         }
 
     }
     if (complete != nil) {
-        self.xmagicResPath = resPath;
         complete(error == nil);
+    }
+}
+
+-(void)copyItemsFromBundleToSandbox:(NSString *)bundleFolderPath  sandboxFolderPath:(NSString *)sandboxFolderPath {
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    
+    // 获取 Bundle 路径下的文件和文件夹列表
+    NSArray *bundleFolderContents = [fileManager contentsOfDirectoryAtPath:bundleFolderPath error:nil];
+    
+    for (NSString *itemName in bundleFolderContents) {
+        NSString *bundleItemFullPath = [bundleFolderPath stringByAppendingPathComponent:itemName];
+        BOOL isDirectory;
+        [fileManager fileExistsAtPath:bundleItemFullPath isDirectory:&isDirectory];
+        
+        NSString *sandboxItemFullPath = [sandboxFolderPath stringByAppendingPathComponent:itemName];
+            
+        // 检查沙盒路径下是否存在该文件夹或文件
+        if (![fileManager fileExistsAtPath:sandboxItemFullPath]) {
+            // 如果不存在，则将 Bundle 中的文件夹或文件复制到沙盒路径下
+            NSError *error;
+            [fileManager copyItemAtPath:bundleItemFullPath toPath:sandboxItemFullPath error:&error];
+            if (error) {
+                NSLog(@"error: %@", error.localizedDescription);
+            }
+        }
     }
 }
 
@@ -90,13 +127,12 @@ static XmagicApiManager *shareSingleton = nil;
     _resNames = @[@"Light3DPlugin",@"LightBodyPlugin",@"LightCore",
     @"LightHandPlugin",@"LightSegmentPlugin",@"makeupMotionRes",@"2dMotionRes",
     @"3dMotionRes",@"ganMotionRes",@"handMotionRes",@"lut",@"segmentMotionRes"];
-    _lock = [[NSLock alloc] init];
 }
 
 //Authentication
 //鉴权
 -(void)setLicense:(NSString *)licenseKey licenseUrl:(NSString *)licenseUrl completion:(setLicenseCallback)completion{
-    [TELicenseCheck setTELicense:licenseUrl key:licenseKey completion:^(NSInteger authresult, NSString * _Nonnull errorMsg) {
+    [TELicenseCheck setTELicense:@"https://license-test.vod2.myqcloud.com/test/license/testV2/1258289294_1/v_cube.license" key:@"be0f5e526a465fed3d47947f6b78fc50" completion:^(NSInteger authresult, NSString * _Nonnull errorMsg) {
         if(completion != nil){
             completion(authresult,errorMsg);
         }
@@ -137,12 +173,19 @@ static XmagicApiManager *shareSingleton = nil;
     }
 }
 
+-(NSLock *)lock{
+    if (!_lock) {
+        _lock = [[NSLock alloc] init];
+    }
+    return _lock;
+}
+
 -(void)onDestroy{
     if (self.xMagicApi != nil) {
-        [_lock lock];
+        [self.lock lock];
         [self.xMagicApi deinit];
         self.xMagicApi = nil;
-        [_lock unlock];
+        [self.lock unlock];
     }
 }
 
@@ -192,7 +235,7 @@ static XmagicApiManager *shareSingleton = nil;
 
 //build sdk
 //创建sdk
-- (void)buildBeautySDK:(int)width and:(int)height texture:(unsigned)textureID {
+- (void)buildBeautySDK:(int)width and:(int)height{
     NSDictionary *assetsDict = @{@"core_name":@"LightCore.bundle",
                                  @"root_path":self.xmagicResPath,
                                  @"setDowngradePerformance":@(self.highPerfoemance)
@@ -202,9 +245,13 @@ static XmagicApiManager *shareSingleton = nil;
    self.xMagicApi = [[XMagic alloc] initWithRenderSize:CGSizeMake(width,height) assetsDict:assetsDict];
    [self.xMagicApi registerSDKEventListener:self];
    [self.xMagicApi registerLoggerListener:self withDefaultLevel:YT_SDK_ERROR_LEVEL];
-   
     _makeup = @"";
-    [self.xMagicApi configPropertyWithType:@"beauty" withName:@"beauty.whiten" withData:@"1" withExtraInfo:nil];
+    if (!self.xmagicInit) {
+        for (NSDictionary *dic in _saveEffectList) {
+            [self setEffect:dic];
+        }
+        [_saveEffectList removeAllObjects];
+    }
 }
 
 
@@ -247,7 +294,7 @@ static XmagicApiManager *shareSingleton = nil;
                 NSDictionary *dic = @{@"bgName":jsonDic[@"effKey"], @"bgType":@0, @"timeOffset": @0};
                 [self.xMagicApi configPropertyWithType:@"motion" withName:@"video_empty_segmentation" withData:jsonDic[@"resPath"] withExtraInfo:dic];
             }else{//视频
-                [self convertVideoQuailtyWithInputAVURLAsset:asset outputURL:newVideoUrl resPath:jsonDic[@"resPath"]];
+                [self convertVideoQuailtyWithInputAVURLAsset:asset outputURL:newVideoUrl resPath:jsonDic[@"resPath"] setEffect:NO paramDic:nil];
             }
         }else{
             [self.xMagicApi configPropertyWithType:@"motion" withName:[self getString:
@@ -271,11 +318,109 @@ static XmagicApiManager *shareSingleton = nil;
     }
 }
 
+- (void)setEffect:(NSDictionary *)dic{
+    if (self.xMagicApi == nil) {
+        _xmagicInit = NO;
+        if (!_saveEffectList) {
+            _saveEffectList = [NSMutableArray array];
+        }
+        [_saveEffectList addObject:dic];
+        return;
+    }
+    _xmagicInit = YES;
+    NSString *effectName = dic[@"effectName"];
+    int effectValue = [dic[@"effectValue"] intValue];
+    NSString *resourcePath = dic[@"resourcePath"];
+    NSDictionary *extraInfoDic = dic[@"extraInfo"];
+    NSMutableDictionary *extraInfo = extraInfoDic.mutableCopy;
+    if([extraInfo[@"bgType"] isEqualToString:@"0"] && ![extraInfo[@"bgPath"] hasSuffix:@".pag"]){
+        UIImage *image = [UIImage imageWithContentsOfFile:extraInfo[@"bgPath"]];
+        image = [self fixOrientation:image];
+        NSData *data = UIImagePNGRepresentation(image);
+        NSString *imagePath = [self createImagePath:@"image.png"];
+        [[NSFileManager defaultManager] createFileAtPath:imagePath contents:data attributes:nil];
+        extraInfo[@"bgPath"] = imagePath;
+    }else if ([extraInfo[@"bgType"] isEqualToString:@"1"]){
+        NSDateFormatter *formater = [[NSDateFormatter alloc] init];
+        [formater setDateFormat:@"yyyy-MM-dd-HH.mm.ss"];
+        NSURL *newVideoUrl = [NSURL fileURLWithPath:[NSHomeDirectory() stringByAppendingFormat:@"/Documents/output-%@.mp4", [formater stringFromDate:[NSDate date]]]];
+        AVURLAsset * asset = [AVURLAsset assetWithURL:[NSURL fileURLWithPath:extraInfo[@"bgPath"]]];
+        [self convertVideoQuailtyWithInputAVURLAsset:asset outputURL:newVideoUrl resPath:extraInfo[@"bgPath"] setEffect:YES paramDic:dic];
+        return;
+    }
+    [self.xMagicApi setEffect:effectName effectValue:effectValue resourcePath:resourcePath extraInfo:extraInfo];
+}
+
+-(NSString *)createImagePath:(NSString *)fileName{
+    NSArray *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentPath = [path objectAtIndex:0];
+    NSString *imageDocPath = [documentPath stringByAppendingPathComponent:@"TencentEffect_MediaFile"];
+    [[NSFileManager defaultManager] createDirectoryAtPath:imageDocPath withIntermediateDirectories:YES attributes:nil error:nil];
+    return [imageDocPath stringByAppendingPathComponent:fileName];
+}
+
+- (UIImage *)fixOrientation:(UIImage*)image {
+    if (image.imageOrientation == UIImageOrientationUp) return image;
+    CGAffineTransform transform = CGAffineTransformIdentity;
+    switch (image.imageOrientation) {
+        case UIImageOrientationDown:
+        case UIImageOrientationDownMirrored:
+            transform = CGAffineTransformTranslate(transform, image.size.width, image.size.height);
+            transform = CGAffineTransformRotate(transform, M_PI);
+            break;
+        case UIImageOrientationLeft:
+        case UIImageOrientationLeftMirrored:
+            transform = CGAffineTransformTranslate(transform, image.size.width, 0);
+            transform = CGAffineTransformRotate(transform, M_PI_2);
+            break;
+        case UIImageOrientationRight:
+        case UIImageOrientationRightMirrored:
+            transform = CGAffineTransformTranslate(transform, 0, image.size.height);
+            transform = CGAffineTransformRotate(transform, -M_PI_2);
+            break;
+    }
+    switch (image.imageOrientation) {
+        case UIImageOrientationUpMirrored:
+        case UIImageOrientationDownMirrored:
+            transform = CGAffineTransformTranslate(transform, image.size.width, 0);
+            transform = CGAffineTransformScale(transform, -1, 1);
+            break;
+        case UIImageOrientationLeftMirrored:
+        case UIImageOrientationRightMirrored:
+            transform = CGAffineTransformTranslate(transform, image.size.height, 0);
+            transform = CGAffineTransformScale(transform, -1, 1);
+            break;
+    }
+    CGContextRef ctx = CGBitmapContextCreate(NULL, image.size.width, image.size.height,
+                                             CGImageGetBitsPerComponent(image.CGImage), 0,
+                                             CGImageGetColorSpace(image.CGImage),
+                                             CGImageGetBitmapInfo(image.CGImage));
+    CGContextConcatCTM(ctx, transform);
+    switch (image.imageOrientation) {
+        case UIImageOrientationLeft:
+        case UIImageOrientationLeftMirrored:
+        case UIImageOrientationRight:
+        case UIImageOrientationRightMirrored:
+            CGContextDrawImage(ctx, CGRectMake(0,0,image.size.height,image.size.width), image.CGImage);
+            break;
+        default:
+            CGContextDrawImage(ctx, CGRectMake(0,0,image.size.width,image.size.height), image.CGImage);
+            break;
+    }
+    CGImageRef cgimg = CGBitmapContextCreateImage(ctx);
+    UIImage *img = [UIImage imageWithCGImage:cgimg];
+    CGContextRelease(ctx);
+    CGImageRelease(cgimg);
+    return img;
+}
+
 // Video compression and transcoding
 // 视频压缩转码处理
 -(void)convertVideoQuailtyWithInputAVURLAsset:(AVURLAsset*)avAsset
                               outputURL:(NSURL*)outputURL
-                                       resPath:(NSString *)resPath {
+                                resPath:(NSString *)resPath
+                              setEffect:(BOOL)setEffect
+                               paramDic:(NSDictionary *)paramDic{
     CMTime videoTime = [avAsset duration];
     int timeOffset = ceil(1000 * videoTime.value / videoTime.timescale) - 10;
     if (timeOffset > MAX_SEG_VIDEO_DURATION) {
@@ -304,9 +449,16 @@ static XmagicApiManager *shareSingleton = nil;
                 break;
             case AVAssetExportSessionStatusCompleted:{
                 NSLog(@"AVAssetExportSessionStatusCompleted");
-                NSDictionary *dic = @{@"bgName":outputURL.path, @"bgType":@1, @"timeOffset": [NSNumber numberWithInt:timeOffset]};
-                [self.xMagicApi configPropertyWithType:@"motion"
-                withName:@"video_empty_segmentation" withData:resPath withExtraInfo:dic];
+                if(setEffect){
+                    NSDictionary *extraInfoDic = paramDic[@"extraInfo"];
+                    NSMutableDictionary *extraInfo = extraInfoDic.mutableCopy;
+                    extraInfo[@"bgPath"] = outputURL.path;
+                    [self.xMagicApi setEffect:paramDic[@"effectName"] effectValue:paramDic[@"effectValue"] resourcePath:paramDic[@"resourcePath"] extraInfo:extraInfo];
+                }else{
+                    NSDictionary *dic = @{@"bgName":outputURL.path, @"bgType":@1, @"timeOffset": [NSNumber numberWithInt:timeOffset]};
+                    [self.xMagicApi configPropertyWithType:@"motion"
+                    withName:@"video_empty_segmentation" withData:resPath withExtraInfo:dic];
+                }
             }
                 break;
             case AVAssetExportSessionStatusFailed:
@@ -323,9 +475,9 @@ static XmagicApiManager *shareSingleton = nil;
 //return TextureId
 //获取TextureId
 -(int)getTextureId:(ITXCustomBeautyVideoFrame * _Nonnull)srcFrame{
-    [_lock lock];
+    [self.lock lock];
     if (self.xMagicApi == nil) {
-        [self buildBeautySDK:srcFrame.width and:srcFrame.height texture:srcFrame.textureId];
+        [self buildBeautySDK:srcFrame.width and:srcFrame.height];
         self.heightF = srcFrame.height;
         self.widthF = srcFrame.width;
     }
@@ -341,7 +493,7 @@ static XmagicApiManager *shareSingleton = nil;
     input.textureData.textureHeight = srcFrame.height;
     input.dataType = kYTTextureData;
     YTProcessOutput *output = [self.xMagicApi process:input withOrigin:YtLightImageOriginTopLeft withOrientation:YtLightCameraRotation0];
-    [_lock unlock];
+    [self.lock unlock];
     return output.textureData.texture;
 }
 

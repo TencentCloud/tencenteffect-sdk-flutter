@@ -31,8 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.tencent.xmagic.XmagicConstant;
-
 
 /**
  * tencent_effect_flutter
@@ -64,6 +62,7 @@ public class XmagicApiManager implements SensorEventListener {
     private volatile boolean enableYTData = false;
     //是否开启tipsListener回调
     private volatile boolean tipsListener = false;
+
     static class ClassHolder {
         static final XmagicApiManager INSTANCE = new XmagicApiManager();
     }
@@ -79,17 +78,11 @@ public class XmagicApiManager implements SensorEventListener {
      * @param context
      * @return
      */
-    public void initModelResource(Context context, String pathDir, InitModelResourceCallBack callBack) {
-        if (TextUtils.isEmpty(pathDir)) {
-            if (callBack != null) {
-                callBack.onResult(false);
-            }
-            return;
+    public void initModelResource(Context context, InitModelResourceCallBack callBack) {
+        String resourceDir = XmagicResParser.getResPath();
+        if (!new File(resourceDir).exists()) {
+            new File(resourceDir).mkdirs();
         }
-        if (!new File(pathDir).exists()) {
-            new File(pathDir).mkdirs();
-        }
-        XmagicResParser.setResPath(pathDir);
         new Thread(() -> {
             boolean result = XmagicResParser.copyRes(context.getApplicationContext());
             new Handler(Looper.getMainLooper()).post(() -> {
@@ -102,7 +95,7 @@ public class XmagicApiManager implements SensorEventListener {
 
 
     public static int addAiModeFiles(String inputDir, String resDir) {
-        return XmagicApi.addAiModeFiles(inputDir,resDir);
+        return XmagicApi.addAiModeFiles(inputDir, resDir);
     }
 
     public static boolean setLibPathAndLoad(String libPath) {
@@ -118,7 +111,7 @@ public class XmagicApiManager implements SensorEventListener {
         });
     }
 
-    public void createXmagicApi() {
+    public void onCreateApi() {
         XmagicApi api = new XmagicApi(mApplicationContext, XmagicResParser.getResPath(), (s, i) -> {
             if (managerListener != null) {
                 managerListener.onXmagicPropertyError(s, i);
@@ -177,9 +170,9 @@ public class XmagicApiManager implements SensorEventListener {
         if (isPerformance) {
             api.setDowngradePerformance();
         }
-    //    XmagicProperty.XmagicPropertyValues values = new XmagicProperty.XmagicPropertyValues(0, 100, 1, 0, 1);
-    //    String effKey = XmagicConstant.BeautyConstant.BEAUTY_WHITEN;
-    //    api.updateProperty(new XmagicProperty<>(XmagicProperty.Category.BEAUTY, null, null, effKey, values));
+//        XmagicProperty.XmagicPropertyValues values = new XmagicProperty.XmagicPropertyValues(0, 100, 1, 0, 1);
+//        String effKey = XmagicConstant.BeautyConstant.BEAUTY_WHITEN;
+//        api.updateProperty(new XmagicProperty<>(XmagicProperty.Category.BEAUTY, null, null, effKey, values));
         xmagicApi = api;
     }
 
@@ -243,6 +236,7 @@ public class XmagicApiManager implements SensorEventListener {
         xmagicApi = null;
     }
 
+    @Deprecated
     public void updateProperty(XmagicProperty<XmagicProperty.XmagicPropertyValues> xmagicProperty) {
         if (xMagicApiIsNull()) {
             LogUtils.e(TAG, "updateProperty: xmagicApi is null ");
@@ -278,6 +272,14 @@ public class XmagicApiManager implements SensorEventListener {
         });
     }
 
+    public void setEffect(String effectName, int effectValue, String resourcePath, Map<String, String> extraInfo) {
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "setEffect: xmagicApi is null ");
+            return;
+        }
+        xmagicApi.setEffect(effectName, effectValue, resourcePath, extraInfo);
+    }
+
     public int process(int textureId, int width, int height) {
         if (xMagicApiIsNull()) {
             LogUtils.e(TAG, "process: xmagicApi is null ");
@@ -289,7 +291,6 @@ public class XmagicApiManager implements SensorEventListener {
         }
         return xmagicApi.process(textureId, width, height);
     }
-
 
 
     /**
@@ -331,6 +332,20 @@ public class XmagicApiManager implements SensorEventListener {
             return;
         }
         xmagicApi.isDeviceSupport(assetsList);
+    }
+
+
+    /**
+     * 根据素材资源路径检测当前设备是否支持当前素材
+     *
+     * @param motionResPath
+     */
+    public boolean isDeviceSupport(String motionResPath) {
+        if (xMagicApiIsNull()) {
+            LogUtils.e(TAG, "isDeviceSupport: xmagicApi is null " + motionResPath);
+            return false;
+        }
+        return xmagicApi.isDeviceSupport(motionResPath);
     }
 
     /**
@@ -377,6 +392,10 @@ public class XmagicApiManager implements SensorEventListener {
         mApplicationContext = context;
     }
 
+    public Context getApplicationContext() {
+        return mApplicationContext;
+    }
+
     /**
      * 判断xmagicAPI对象是否为空
      *
@@ -405,7 +424,6 @@ public class XmagicApiManager implements SensorEventListener {
         }
         xmagicApi.enableEnhancedMode();
     }
-
 
 
     /**
@@ -461,6 +479,7 @@ public class XmagicApiManager implements SensorEventListener {
 
     /**
      * 设置方向
+     *
      * @param rotationType 0，1，2，3 分别代表 0，90，180，270
      */
     public void setImageOrientation(int rotationType) {

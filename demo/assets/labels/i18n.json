@@ -74,7 +74,9 @@
     "demo_live_label2": "All abilities",
     "demo_live_label3": "Is support beauty",
     "demo_live_label4": "Is support Motions",
-    "demo_live_label5": "Get Abilities By XmagicProperty"
+    "demo_live_label5": "Get Abilities By XmagicProperty",
+    "panel_slider_type_makeup": "Makeup",
+    "panel_slider_type_lut": "Filter"
   },
   "zh": {
     "none": "无",
@@ -151,6 +153,8 @@
     "demo_live_label2": "获取设备所有原子属性",
     "demo_live_label3": "检测是否支持美颜",
     "demo_live_label4": "检测设备是否支持此动效",
-    "demo_live_label5": "获取属性所需要的原子能力"
+    "demo_live_label5": "获取属性所需要的原子能力",
+    "panel_slider_type_makeup": "美妆",
+    "panel_slider_type_lut": "滤镜"
   }
 }

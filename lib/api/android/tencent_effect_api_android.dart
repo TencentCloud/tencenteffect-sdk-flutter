@@ -108,12 +108,10 @@ class TencentEffectApiAndroid implements TencentEffectApi {
 
 
   @override
-  void initXmagic(String xmagicResDir,InitXmagicCallBack xmagicCallBack) {
+  void initXmagic(InitXmagicCallBack xmagicCallBack) {
     _initXMagicCallBack = xmagicCallBack;
-    _channel.invokeMethod("initXmagic",{"pathDir":xmagicResDir});
+    _channel.invokeMethod("initXmagic");
   }
-
-
 
   @override
   void onPause() {
@@ -284,6 +282,29 @@ class TencentEffectApiAndroid implements TencentEffectApi {
      return result;
   }
 
+  @override
+  void setEffect(String effectName, int effectValue, String? resourcePath, Map<String, String>? extraInfo) {
+    Map<String, Object> params = {};
+    params["effectName"] = effectName;
+    params["effectValue"] = effectValue;
+    if (resourcePath != null) {
+      params["resourcePath"] = resourcePath;
+    }
+    if (extraInfo != null) {
+      params["extraInfo"] = extraInfo;
+    }
+    _channel.invokeMethod("setEffect", params);
+  }
 
+  @override
+  void setResourcePath(String xMagicResDir) {
+    _channel.invokeMethod("setResourcePath",{"pathDir":xMagicResDir});
+  }
+
+  @override
+  Future<bool> isDeviceSupportMotion(String motionResPath) async {
+    return await _channel.invokeMethod(
+        "isDeviceSupportMotion", {"motionResPath": motionResPath});
+  }
 }
 typedef AddAiModeCallBack = void Function(String inputDir, int code);

@@ -48,7 +48,7 @@ public class XmagicProcesserFactory implements ITXCustomBeautyProcesserFactory {
 
 
         void create() {
-            XmagicApiManager.getInstance().createXmagicApi();
+            XmagicApiManager.getInstance().onCreateApi();
         }
 
         void destroy() {

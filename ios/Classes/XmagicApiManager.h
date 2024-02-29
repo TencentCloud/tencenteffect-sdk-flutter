@@ -25,7 +25,7 @@ typedef void (^eventYTDataCallBlock)(id event);
 @property (nonatomic, copy) eventYTDataCallBlock eventYTDataCallBlock; //ytdata数据回调
 
 //初始化美颜资源
--(void)initXmagicRes:(NSString *)resPath complete:(initXmagicResCallback)complete;
+-(void)initXmagicRes:(initXmagicResCallback)complete;
 
 //鉴权
 -(void)setLicense:(NSString *)licenseKey licenseUrl:(NSString *)licenseUrl completion:(setLicenseCallback)completion;
@@ -35,6 +35,9 @@ typedef void (^eventYTDataCallBlock)(id event);
 
 //设置美颜效果
 -(void)updateProperty:(NSString *)json;
+
+//设置美颜效果(3.5.0新增)
+- (void)setEffect:(NSDictionary *)dic;
 
 //设置日志等级
 -(void)setXmagicLogLevel:(int)logLevel;
@@ -53,6 +56,8 @@ typedef void (^eventYTDataCallBlock)(id event);
 
 //设置某个特性的开或关
 - (void)setFeatureEnableDisable:(NSString *_Nonnull)featureName enable:(BOOL)enable;
+
+- (void)setResourcePath:(NSString *)pathDir;
 
 //设置画面方向
 - (void)setImageOrientation:(int)orientation;
