@@ -7,7 +7,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -38,7 +37,7 @@ import java.util.Map;
  * Copyright (c) 2020年 Tencent. All rights reserved
  */
 
-public class XmagicApiManager implements SensorEventListener {
+public class XmagicApiManager implements SensorEventListener, XmagicAIDataListener, XmagicTipsListener {
 
     private static final String TAG = "XmagicApiManager";
 
@@ -61,7 +60,7 @@ public class XmagicApiManager implements SensorEventListener {
     //是否开启YTDataListener回调
     private volatile boolean enableYTData = false;
     //是否开启tipsListener回调
-    private volatile boolean tipsListener = false;
+    private volatile boolean enableTipsListener = false;
 
     static class ClassHolder {
         static final XmagicApiManager INSTANCE = new XmagicApiManager();
@@ -119,60 +118,16 @@ public class XmagicApiManager implements SensorEventListener {
         });
         mSensorManager = (SensorManager) mApplicationContext.getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        api.setAIDataListener(new XmagicAIDataListener() {
-            @Override
-            public void onFaceDataUpdated(List<TEFaceData> list) {
-                if (!enableAiData || list == null || managerListener == null) {
-                    return;
-                }
-                managerListener.onFaceDataUpdated(new Gson().toJson(list));
-            }
-
-            @Override
-            public void onHandDataUpdated(List<TEHandData> list) {
-                if (!enableAiData || list == null || managerListener == null) {
-                    return;
-                }
-                managerListener.onHandDataUpdated(new Gson().toJson(list));
-            }
-
-            @Override
-            public void onBodyDataUpdated(List<TEBodyData> list) {
-                if (!enableAiData || list == null || managerListener == null) {
-                    return;
-                }
-                managerListener.onBodyDataUpdated(new Gson().toJson(list));
-            }
-
-            @Override
-            public void onAIDataUpdated(String s) {
-                if (enableYTData && managerListener != null) {
-                    managerListener.onYTDataUpdate(s);
-                }
-            }
-        });
-        api.setTipsListener(new XmagicTipsListener() {
-            @Override
-            public void tipsNeedShow(String tips, String tipsIcon, int type, int duration) {
-                if (tipsListener && managerListener != null) {
-                    managerListener.tipsNeedShow(tips, tipsIcon, type, duration);
-                }
-            }
-
-            @Override
-            public void tipsNeedHide(String tips, String tipsIcon, int type) {
-                if (tipsListener && managerListener != null) {
-                    managerListener.tipsNeedHide(tips, tipsIcon, type);
-                }
-            }
-        });
+        if (enableAiData || enableYTData) {
+            api.setAIDataListener(this);
+        }
+        if (this.enableTipsListener) {
+            api.setTipsListener(this);
+        }
         api.setXmagicLogLevel(xMagicLogLevel);
         if (isPerformance) {
             api.setDowngradePerformance();
         }
-//        XmagicProperty.XmagicPropertyValues values = new XmagicProperty.XmagicPropertyValues(0, 100, 1, 0, 1);
-//        String effKey = XmagicConstant.BeautyConstant.BEAUTY_WHITEN;
-//        api.updateProperty(new XmagicProperty<>(XmagicProperty.Category.BEAUTY, null, null, effKey, values));
         xmagicApi = api;
     }
 
@@ -223,7 +178,7 @@ public class XmagicApiManager implements SensorEventListener {
     public void onDestroy() {
         enableAiData = false;
         enableYTData = false;
-        tipsListener = false;
+        enableTipsListener = false;
         isPerformance = false;
         currentStreamType = XmagicApi.PROCESS_TYPE_CAMERA_STREAM;
         if (xMagicApiIsNull()) {
@@ -519,6 +474,13 @@ public class XmagicApiManager implements SensorEventListener {
      */
     public void enableAIDataListener(boolean enable) {
         this.enableAiData = enable;
+        if (this.xmagicApi != null) {
+            if (enable) {
+                this.xmagicApi.setAIDataListener(this);
+            } else {
+                this.xmagicApi.setAIDataListener(null);
+            }
+        }
         LogUtils.d(TAG, "enableAIDataListener: enable = " + enable);
     }
 
@@ -529,6 +491,13 @@ public class XmagicApiManager implements SensorEventListener {
      */
     public void enableYTDataListener(boolean enable) {
         this.enableYTData = enable;
+        if (this.xmagicApi != null) {
+            if (enable) {
+                this.xmagicApi.setAIDataListener(this);
+            } else {
+                this.xmagicApi.setAIDataListener(null);
+            }
+        }
         LogUtils.d(TAG, "enableYTDataListener: enable = " + enable);
     }
 
@@ -538,10 +507,62 @@ public class XmagicApiManager implements SensorEventListener {
      * @param enable true 表示开启，false 表示关闭
      */
     public void enableTipsListener(boolean enable) {
-        this.tipsListener = enable;
+        this.enableTipsListener = enable;
+        if (this.xmagicApi != null) {
+            if (enable) {
+                this.xmagicApi.setTipsListener(this);
+            } else {
+                this.xmagicApi.setTipsListener(null);
+            }
+        }
         LogUtils.d(TAG, "enableTipsListener: enable = " + enable);
     }
 
+
+    @Override
+    public void onFaceDataUpdated(List<TEFaceData> list) {
+        if (!enableAiData || list == null || managerListener == null) {
+            return;
+        }
+        managerListener.onFaceDataUpdated(new Gson().toJson(list));
+    }
+
+    @Override
+    public void onHandDataUpdated(List<TEHandData> list) {
+        if (!enableAiData || list == null || managerListener == null) {
+            return;
+        }
+        managerListener.onHandDataUpdated(new Gson().toJson(list));
+    }
+
+    @Override
+    public void onBodyDataUpdated(List<TEBodyData> list) {
+        if (!enableAiData || list == null || managerListener == null) {
+            return;
+        }
+        managerListener.onBodyDataUpdated(new Gson().toJson(list));
+    }
+
+    @Override
+    public void onAIDataUpdated(String s) {
+        if (enableYTData && managerListener != null) {
+            managerListener.onYTDataUpdate(s);
+        }
+    }
+
+    @Override
+    public void tipsNeedShow(String tips, String tipsIcon, int type, int duration) {
+        if (enableTipsListener && managerListener != null) {
+            managerListener.tipsNeedShow(tips, tipsIcon, type, duration);
+        }
+    }
+
+    @Override
+    public void tipsNeedHide(String tips, String tipsIcon, int type) {
+        if (enableTipsListener && managerListener != null) {
+            managerListener.tipsNeedHide(tips, tipsIcon, type);
+        }
+    }
 
     interface InitModelResourceCallBack {
         void onResult(boolean isCopySuccess);
