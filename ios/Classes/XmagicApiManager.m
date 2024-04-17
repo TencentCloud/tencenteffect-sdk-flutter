@@ -132,7 +132,7 @@ static XmagicApiManager *shareSingleton = nil;
 //Authentication
 //鉴权
 -(void)setLicense:(NSString *)licenseKey licenseUrl:(NSString *)licenseUrl completion:(setLicenseCallback)completion{
-    [TELicenseCheck setTELicense:@"https://license-test.vod2.myqcloud.com/test/license/testV2/1258289294_1/v_cube.license" key:@"be0f5e526a465fed3d47947f6b78fc50" completion:^(NSInteger authresult, NSString * _Nonnull errorMsg) {
+    [TELicenseCheck setTELicense:licenseUrl key:licenseKey completion:^(NSInteger authresult, NSString * _Nonnull errorMsg) {
         if(completion != nil){
             completion(authresult,errorMsg);
         }
