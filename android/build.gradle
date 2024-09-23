@@ -58,7 +58,7 @@ android {
 //    }
     dependencies {
         compileOnly 'com.tencent.liteav:custom-video-processor:latest.release'  //与直播间里关系的公共库
-        compileOnly 'com.google.code.gson:gson:2.8.6'
+        compileOnly 'com.google.code.gson:gson:2.8.9'
         compileOnly fileTree(dir: "libs", include: ['*.jar'])
         compileOnly fileTree(dir: "libs", include: ['*.aar'])
 //        compileOnly files("$flutterRoot/bin/cache/artifacts/engine/android-arm/flutter.jar")
